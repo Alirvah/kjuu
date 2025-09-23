@@ -1,0 +1,10 @@
+Django>=5.0,<6.0
+gunicorn
+psycopg2-binary
+dj-database-url
+qrcode
+reportlab
+whitenoise
+django_ratelimit
+pytest
+pytest-django

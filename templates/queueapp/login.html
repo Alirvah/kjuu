@@ -1,0 +1,57 @@
+{% extends 'queueapp/base.html' %}
+{% block title %}Login{% endblock %}
+
+{% block content %}
+    <div class="max-w-sm mx-auto mt-10 space-y-6">
+        <h2 class="text-2xl font-semibold text-gray-900 text-center">Prihlásenie</h2>
+
+        <form method="post" class="space-y-4">
+            {% csrf_token %}
+
+            <!-- Username Input -->
+            <div class="space-y-2">
+                <label for="username" class="block text-lg font-medium text-gray-700">Používateľské meno:</label>
+                <input type="text" name="username" id="username" class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                {% if form.username.errors %}
+                    <div class="text-red-500">
+                        {% for error in form.username.errors %}
+                            <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Password Input -->
+            <div class="space-y-2">
+                <label for="password" class="block text-lg font-medium text-gray-700">Heslo:</label>
+                <input type="password" name="password" id="password" class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+				{% if form.password.errors %}
+            	        <div class="text-red-500">
+            	            {% for error in form.password.errors %}
+            	                <p>{{ error }}</p>
+            	            {% endfor %}
+            	        </div>
+            	    {% endif %}
+            	</div>
+
+            <!-- Submit Button -->
+            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md transition">Prihlásiť sa</button>
+			{% if form.non_field_errors %}
+			  <ul class="errorlist">
+			    {% for error in form.non_field_errors %}
+			      <li class="text-red-500">{{ error }}</li>
+			    {% endfor %}
+			  </ul>
+			{% endif %}
+        </form>
+
+        <p class="text-center text-sm text-gray-600">
+			Ešte nemáte účet?
+			<a href="{% url 'queueapp:signup' %}?next={{ next|default:'' }}" 
+			   class="text-blue-600 hover:text-blue-700">
+			    Registrujte sa
+			</a>
+        </p>
+    </div>
+{% endblock %}
+

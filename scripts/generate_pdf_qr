@@ -1,0 +1,25 @@
+#!python
+
+from queueapp.models import Queue
+from queueapp.utils import generate_kjuu_pdf
+from django.core.files.base import ContentFile
+import os
+
+qs = Queue.objects.all()
+
+for q in qs:
+
+  if q.qr_code:
+    old_path = q.qr_code.path
+    q.qr_code.delete(save=False)
+    if os.path.exists(old_path):
+      os.remove(old_path)
+
+    base_url = "https://kjuu.sk"
+    queue_url = f"{base_url}/queue/go/?queue_id={q.short_id}"
+    qr_message = f"Naskenovaím tohto QR kódu sa zaradíte do virtuálneho radu:"
+    title = "Virtuálny rad - kjuu.sk"
+    pdf_buffer = generate_kjuu_pdf(queue_url, title=title, description=qr_message, name=q.name, short_code=q.short_id)
+    filename = f"{q.short_id}.pdf"
+    q.qr_code.save(filename, ContentFile(pdf_buffer.read()))
+

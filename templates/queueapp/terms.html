@@ -1,0 +1,34 @@
+{% extends "queueapp/base.html" %}
+{% block content %}
+<div class="max-w-3xl mx-auto p-4 text-sm leading-relaxed">
+    <h1 class="text-2xl font-bold mb-6">Podmienky používania</h1>
+
+    <p class="mb-4">Tieto Podmienky používania ("Podmienky") upravujú prístup a používanie webovej aplikácie ("Aplikácia"), ktorá slúži na správu a organizáciu virtuálnych poradovníkov. Prístupom k tejto Aplikácii, jej používaním alebo registráciou súhlasíte s týmito Podmienkami v plnom rozsahu. Ak s týmito Podmienkami nesúhlasíte, prosíme, nepoužívajte túto Aplikáciu.</p>
+
+    <h2 class="text-xl font-semibold mt-6 mb-2">1. Prístup a registrácia</h2>
+    <p class="mb-2">Používanie určitých funkcií Aplikácie vyžaduje registráciu používateľského účtu. Používateľ sa zaväzuje uvádzať pri registrácii pravdivé, aktuálne a úplné informácie a tieto aktualizovať podľa potreby. Prevádzkovateľ si vyhradzuje právo odmietnuť registráciu, pozastaviť alebo zrušiť účet, ak má dôvodné podozrenie na porušenie Podmienok alebo zákonných ustanovení.</p>
+
+    <h2 class="text-xl font-semibold mt-6 mb-2">2. Povinnosti používateľa</h2>
+    <ul class="list-disc list-inside mb-4">
+        <li>Používateľ nesmie aplikáciu zneužívať, narušovať jej technickú funkčnosť alebo ohrozovať bezpečnosť systému.</li>
+        <li>Nie je povolené manipulovať s poradím v rade alebo zakladať falošné rady za účelom podvodu.</li>
+        <li>Používateľ nesie plnú zodpovednosť za aktivitu vykonanú pod jeho účtom.</li>
+		<li>Používanie Aplikácie je povolené len osobám starším ako 16 rokov.</li>
+    </ul>
+
+    <h2 class="text-xl font-semibold mt-6 mb-2">3. Práva a obmedzenia prevádzkovateľa</h2>
+    <p class="mb-2">Prevádzkovateľom applikácie je fyzická osoba. Prevádzkovateľ Aplikácie si vyhradzuje právo kedykoľvek zmeniť, pozastaviť alebo úplne ukončiť poskytovanie služby bez predchádzajúceho upozornenia. Môže tiež jednostranne meniť tieto Podmienky, pričom aktualizované znenie bude zverejnené na tejto stránke a nadobúda účinnosť okamžite po zverejnení.</p>
+
+    <h2 class="text-xl font-semibold mt-6 mb-2">4. Zodpovednosť a zrieknutie sa záruk</h2>
+    <p class="mb-2">Aplikácia je poskytovaná ako dobrovoľná, nekomerčná služba a v stave "tak ako je" bez akýchkoľvek záruk, výslovných alebo predpokladaných. Prevádzkovateľ nezaručuje dostupnosť, bezchybnosť, bezpečnosť ani vhodnosť Aplikácie na akýkoľvek konkrétny účel. Používanie Aplikácie je výhradne na vlastné riziko používateľa.</p>
+    <p class="mb-2">Prevádzkovateľ nenesie žiadnu zodpovednosť za akúkoľvek priamu alebo nepriamu škodu, ušlý zisk, stratu dát, prerušenie služieb alebo inú ujmu spôsobenú používaním alebo nemožnosťou používania Aplikácie.</p>
+
+    <h2 class="text-xl font-semibold mt-6 mb-2">5. Ochrana osobných údajov</h2>
+    <p class="mb-2">Spracovanie osobných údajov sa riadi dokumentom <a href="{% url 'queueapp:privacy' %}" class="text-blue-600 underline">Zásady ochrany osobných údajov</a>. Používaním Aplikácie potvrdzujete, že ste si tieto zásady prečítali a súhlasíte s nimi.</p>
+
+    <h2 class="text-xl font-semibold mt-6 mb-2">6. Záverečné ustanovenia</h2>
+    <p class="mb-2">Tieto Podmienky predstavujú úplnú dohodu medzi vami a prevádzkovateľom Aplikácie. Akékoľvek ustanovenie, ktoré sa ukáže byť neplatné alebo nevykonateľné, nebude mať vplyv na platnosť ostatných ustanovení.</p>
+
+</div>
+{% endblock %}
+

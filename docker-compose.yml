@@ -1,0 +1,22 @@
+services:
+  db:
+    image: postgres:16
+    env_file: .env
+    volumes:
+      - ./data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  web:
+    build: .
+    image: ${APP_NAME}:latest 
+    env_file: .env
+    command: gunicorn ${APP_NAME}.wsgi:application --bind 0.0.0.0:8000
+    user: "1000:1000"
+    volumes:
+      - ./media:/app/media
+      - ./logs:/app/logs
+    ports:
+      - "8030:8000"
+    depends_on:
+      - db
+    restart: unless-stopped

@@ -1,0 +1,83 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Virtuálny Rad{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  	<link rel="icon" type="image/svg+xml" href="{% static 'favicon.svg' %}" />
+	<script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+	<script src="{% static 'js/crypto.js' %}"></script>
+</head>
+<body class="bg-gray-100 text-gray-800 font-sans antialiased">
+    <div class="min-h-screen flex flex-col justify-between">
+        <header class="bg-blue-600 shadow-lg text-white p-4">
+            <div class="container mx-auto flex justify-between items-center">
+				<h1 class="text-xl font-semibold">
+				  <a href="{% url 'queueapp:home' %}" class="flex items-center gap-2">
+				    <svg xmlns="http://www.w3.org/2000/svg" 
+				         width="24" height="24" 
+				         viewBox="0 0 24 24" 
+				         fill="none" 
+				         stroke="currentColor" 
+				         stroke-width="2" 
+				         stroke-linecap="round" 
+				         stroke-linejoin="round" 
+				         class="lucide lucide-users">
+				      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+				      <circle cx="9" cy="7" r="4"></circle>
+				      <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+				      <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+				    </svg>
+				    <span>Virtuálny rad</span>
+				  </a>
+				</h1>
+                <div>
+                    {% if user.is_authenticated %}
+                        <p class="text-sm">{{ user.username }}</p>
+					{% else %}
+                   		<a href="{% url 'queueapp:login' %}?next=/" class="text-white-600 hover:text-white-700 hover:underline">Prihlásiť</a>
+						|
+                   		<a href="{% url 'queueapp:signup' %}?next=/" class="text-white-600 hover:text-white-700 hover:underline">Registrovať</a>
+                    {% endif %}
+                    {% if user.is_superuser %}
+						|
+                   		<a href="{% url 'admin:index' %}" class="text-white-600 hover:text-white-700 hover:underline">Admin</a>
+                    {% endif %}
+                </div>
+            </div>
+        </header>
+
+        <main class="flex-grow p-6">
+            {% if messages %}
+                {% for message in messages %}
+					{% if message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}
+                		<div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4"> <p>{{ message }}</p> </div>
+					{% else %}
+                		<div class="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 mb-4"> <p>{{ message|safe }}</p> </div>
+					{% endif %}
+                {% endfor %}
+            {% endif %}
+
+            <div class="container mx-auto">
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+
+        <footer class="bg-gray-800 text-gray-100 text-center py-4 sticky bottom-0 w-full">
+            {% load tz %}
+            <p class="mb-2">&copy; {% now "Y" %} Virtuálny rad - kjuu.sk</p>
+        	{% if user.is_authenticated %}
+            	<div class="space-x-3 text-xs">
+            	    <a href="{% url 'queueapp:terms' %}" class="underline hover:text-gray-100">Podmienky používania</a>
+                    <span>|</span>
+            	    <a href="{% url 'queueapp:privacy' %}" class="underline hover:text-gray-100">Ochrana osobných údajov</a>
+            	</div>
+			{% endif %}
+        </footer>
+    </div>
+</body>
+</html>
+

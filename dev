@@ -1,0 +1,24 @@
+docker compose run web django-admin startproject kjuu .
+docker compose run web python manage.py makemigrations
+docker compose run web python manage.py migrate
+docker compose run web python manage.py startapp queueapp
+docker compose run web python manage.py collectstatic --noinput
+docker compose run web python manage.py createsuperuser
+docker compose run web python manage.py test
+docker compose run web pytest -q
+
+docker compose run web python manage.py shell
+docker compose run -T web python manage.py shell < scripts/generate_pdf_qr
+
+from django.core.management.utils import get_random_secret_key
+print(get_random_secret_key())
+
+
+sudo vim /etc/nginx/sites-available/kjuu.sk
+sudo ln -s /etc/nginx/sites-available/kjuu.sk /etc/nginx/sites-enabled/
+
+grep -rnw . -e "ratelimit" -A 1
+
+
+docker compose build && docker compose up -d
+docker system prune

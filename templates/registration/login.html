@@ -1,0 +1,33 @@
+{% extends "queueapp/base.html" %}
+
+{% block content %}
+<h2>Login</h2>
+
+<form method="post" novalidate>
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+
+    <div>
+        <label for="{{ form.username.id_for_label }}">Username:</label>
+        {{ form.username }}
+    </div>
+
+    <div>
+        <label for="{{ form.password.id_for_label }}">Password:</label>
+        {{ form.password }}
+    </div>
+
+    {% if next %}
+        <input type="hidden" name="next" value="{{ next }}">
+    {% endif %}
+
+    <button type="submit">Login</button>
+</form>
+
+<p>
+    Don’t have an account?
+    <a href="{% url 'signup' %}{% if next %}?next={{ next }}{% endif %}">Sign up</a>
+</p>
+
+{% endblock %}
+
