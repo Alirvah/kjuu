@@ -1,100 +1,81 @@
-{% extends "queueapp/base.html" %}
+{% extends 'queueapp/base.html' %}
+{% load i18n %}
+{% block title %}{% trans "Privacy Policy" %}{% endblock %}
+
 {% block content %}
-<div class="max-w-3xl text-sm mx-auto p-4">
-    <h1 class="text-2xl font-bold mb-4">Zásady ochrany osobných údajov</h1>
-
-    <p class="mb-4">Prevádzkovateľom webovej aplikácie na správu virtuálnych rád (ďalej len "Aplikácia") je fyzická osoba zodpovedná za spracúvanie osobných údajov používateľov v súlade s nariadením Európskeho parlamentu a Rady (EÚ) 2016/679 (všeobecné nariadenie o ochrane údajov – GDPR) a súvisiacimi právnymi predpismi platnými na území Slovenskej republiky.</p>
-
-    <h2 class="text-xl font-semibold mt-6 mb-3">1. Prevádzkovateľ údajov</h2>
-    <p class="mb-4">Prevádzkovateľom je fyzická osoba, ktorá túto aplikáciu spravuje.
-
-    <h2 class="text-xl font-semibold mt-6 mb-3">2. Rozsah spracúvaných údajov</h2>
-    <p class="mb-4">
-        V rámci prevádzky Aplikácie môže byť dochádzať ku spracúvaniu nasledujúcich kategórií osobných údajov:
+<section class="panel legal">
+    <h1>{% trans "Privacy Policy" %}</h1>
+    <p>
+        {% blocktrans %}
+        This Privacy Policy explains how personal data is processed when using the kjuu web application for virtual queue management.
+        {% endblocktrans %}
     </p>
-	<ul class="list-disc list-inside mb-4">
-        <li>Údaje získané pri registrácii: e-mailová adresa, používateľské meno, autentifikačné poverenia</li>
-        <li>Údaje súvisiace s účasťou v radoch: čas vstupu, číslo v rade, identifikátor slotu, voliteľný dodatočný identifikátor pre identifikáciu v rade</li>
-        <li>Technické údaje: IP adresa, časové údaje, identifikácia zariadenia</li>
-		<li>Dobrovoľne poskytnuté údaje v rámci používateľského rozhrania (napr. pole „poznámka v rade“), ktoré sú end‑to‑end šifrované</li>
+
+    <h2>{% trans "1. Data controller" %}</h2>
+    <p>
+        {% blocktrans %}
+        The controller is the natural person operating this application and responsible for personal data processing under Regulation (EU) 2016/679 (GDPR) and applicable Slovak legislation.
+        {% endblocktrans %}
+    </p>
+
+    <h2>{% trans "2. Categories of processed data" %}</h2>
+    <ul>
+        <li>{% trans "Account data: username and password hash." %}</li>
+        <li>{% trans "Queue participation data: queue code, join time, call time, queue position, unique customer code." %}</li>
+        <li>{% trans "Optional note data submitted by users while waiting in queue." %}</li>
+        <li>{% trans "Technical metadata required for security and service operation (e.g., IP and request timestamps)." %}</li>
     </ul>
 
-	<h2 class="font-semibold mt-6 mb-3">
-	  2.1 End‑to‑end šifrovanie (E2EE)
-	</h2>
-	
-	<p class="mb-4"> Aby boli dobrovoľne poskytované údaje – najmä obsah poľa „poznámka v rade“ – chránené podľa najvyšších štandardov, aplikujeme end‑to‑end šifrovanie: </p>
-	
-	<ul class="list-disc list-inside mb-4">
-	  <li> Generovanie kľúčov pre šifrovanie aj dešifrovanie prebieha výhradne na strane koncového používateľa (v prehliadači alebo natívnej aplikácii).  </li>
-	  <li> Prevádzkovateľ Aplikácie nikdy nezískava prístup k dešifrovacím kľúčom ani k nešifrovanému obsahu poznámky.  </li>
-	  <li> Všetka komunikácia medzi klientom a serverom je navyše chránená protokolom TLS, čím je zabezpečená dôvernosť a integrita prenášaných dát.  </li>
-	  <li> Na úložisku servera sa uchováva výlučne šifrovaný text; ani v prípade kompromitácie databázy nie je možné údaje dešifrovať bez používateľského súkromného kľúča.  </li>
-	</ul>
-
-    <h2 class="text-xl font-semibold mt-6 mb-3">3. Účel spracovania</h2>
-    <p class="mb-4">Spracovanie vyššie uvedených údajov slúži výlučne na zabezpečenie riadneho fungovania Aplikácie, vrátane, ale nie výlučne:
-</p>
-    <ul class="list-disc list-inside mb-4">
-        <li>Autentifikácia používateľov a autorizácia prístupu k funkciám aplikácie</li>
-        <li>Zabezpečenie riadenia poradia používateľov v jednotlivých radoch</li>
-        <li>Komunikácia medzi používateľom a rozhraním aplikácie</li>
-        <li>Vedenie internej evidencie a štatistické spracovanie údajov na účely zlepšovania kvality služieb</li>
+    <h2>{% trans "3. Purposes and legal bases" %}</h2>
+    <ul>
+        <li>{% trans "Service operation and account authentication (GDPR Art. 6(1)(b))." %}</li>
+        <li>{% trans "Security protection, abuse prevention, and service integrity (GDPR Art. 6(1)(f))." %}</li>
+        <li>{% trans "Compliance with legal obligations, if required (GDPR Art. 6(1)(c))." %}</li>
     </ul>
 
-    <h2 class="text-xl font-semibold mt-6 mb-3">4. Uchovávanie údajov a používanie súborov cookies</h2>
-    <p class="mb-4">
-        Osobné údaje sú uchovávané len po dobu nevyhnutne potrebnú na splnenie účelov, na ktoré boli zhromaždené. Po zrušení účtu alebo písomnej žiadosti o výmaz sú údaje odstránené alebo anonymizované.
+    <h2>{% trans "4. End-to-end encrypted notes" %}</h2>
+    <p>
+        {% blocktrans %}
+        Optional queue notes are encrypted in the browser. The server stores encrypted payload only. Decryption requires a private key generated and stored on the client device.
+        {% endblocktrans %}
     </p>
-	<p class="mb-4">
-	    V rámci fungovania Aplikácie môžu byť do vášho zariadenia ukladané tzv. súbory cookies, ktoré slúžia výhradne na zabezpečenie správnej funkcionality a zachovanie používateľskej relácie (session). Aplikácia využíva relácie, ktoré sú nevyhnutné na udržanie stavu prihlásenia používateľa a správu jeho interakcií v rámci Aplikácie.
-	</p>
-	<p class="mb-4">
-	    Tieto súbory neobsahujú žiadne citlivé ani sledovacie informácie a nie sú využívané na analytické ani marketingové účely. Používanie týchto cookies je technicky nevyhnutné.
-	</p>
 
-    <h2 class="text-xl font-semibold mt-6 mb-3">5. Vaše práva</h2>
-	<p class="mb-4">
-	V súlade s GDPR máte viaceré práva: 
-	</p>
-    <ul class="list-disc list-inside mb-4">
-        <li>na prístup k svojim osobným údajom</li>
-        <li>na opravu nepresných alebo neúplných údajov</li>
-        <li>na vymazanie údajov („právo na zabudnutie“)</li>
-        <li>na obmedzenie spracovania</li>
-        <li>na prenositeľnosť údajov</li>
-        <li>vzniesť námietku proti spracovaniu</li>
-        <li>podať sťažnosť dozornému orgánu (Úrad na ochranu osobných údajov SR)</li>
+    <h2>{% trans "5. Data retention" %}</h2>
+    <p>
+        {% blocktrans %}
+        Personal data is retained only for the period necessary to provide the service and protect system security. Queue participation records are removed when queue membership ends, and account data is deleted after account deletion, unless legal obligations require longer retention.
+        {% endblocktrans %}
+    </p>
+
+    <h2>{% trans "6. Recipients and transfers" %}</h2>
+    <p>
+        {% blocktrans %}
+        Data is not sold. Data may be processed by technical providers strictly for hosting and operation of the service. No intentional transfer to third countries is performed unless necessary for infrastructure operation with appropriate safeguards.
+        {% endblocktrans %}
+    </p>
+
+    <h2>{% trans "7. Cookies and session" %}</h2>
+    <p>
+        {% blocktrans %}
+        The application uses technically necessary session cookies to keep users authenticated and secure state-changing actions. No marketing cookies are used by default.
+        {% endblocktrans %}
+    </p>
+
+    <h2>{% trans "8. Data subject rights" %}</h2>
+    <ul>
+        <li>{% trans "Right of access, rectification, erasure, restriction, and data portability where applicable." %}</li>
+        <li>{% trans "Right to object to processing based on legitimate interests." %}</li>
+        <li>{% trans "Right to lodge a complaint with the Office for Personal Data Protection of the Slovak Republic." %}</li>
     </ul>
-	<p class="mb-4">
-		Táto aplikácia vám aktuálne automaticky umožňuje nasledovné:
-	</p>
-	<ul class="list-disc list-inside mb-4">
-	    <li>Vymazanie účtu – svoj účet môžete po prihlasení na hlavnej stránke kedykoľvek trvalo zmazať.</li>
-	</ul>
-	<p class="mb-4">
-		Ak si chcete uplatniť svoje ostatné práva, kontaktujte nás na dole uvedenej adrese.
-	</p>
-   <h2 class="text-xl font-semibold mt-6 mb-3">6. Zabezpečenie údajov</h2>
-    <p class="mb-4">
-        Prevádzkovateľ aplikuje primerané technické a organizačné opatrenia na zabezpečenie ochrany údajov vrátane šifrovania hesiel, zabezpečeného pripojenia (HTTPS), ochrany proti CSRF a obmedzeného prístupu k dátam.
+
+    <h2>{% trans "9. Contact" %}</h2>
+    <p>{% trans "For privacy requests or questions, contact: support@kjuu.sk" %}</p>
+
+    <h2>{% trans "10. Updates" %}</h2>
+    <p>
+        {% blocktrans %}
+        This policy may be updated to reflect legal, technical, or service changes. The current version is always published on this page.
+        {% endblocktrans %}
     </p>
-
-	<h2 class="text-xl font-semibold mt-6 mb-3">7. Zdieľanie údajov</h2>
-	    <p class="mb-4">
-	        Vaše osobné údaje nebudú zdieľané s tretími stranami, s výnimkou ak bude takýto prenos výslovne nevyhnutný na technické zabezpečenie služby.
-	    </p>
-
-    <h2 class="text-xl font-semibold mt-6 mb-3">8. Zmeny tohto vyhlásenia</h2>
-    <p class="mb-4">
-        Prevádzkovateľ si vyhradzuje právo kedykoľvek zmeniť tieto zásady ochrany osobných údajov. Všetky zmeny budú uverejnené priamo v Aplikácii a nadobúdajú účinnosť dňom ich zverejnenia.
-    </p>
-
-    <h2 class="text-xl font-semibold mt-6 mb-3">9. Kontakt</h2>
-    <p class="mb-4">
-        V prípade akýchkoľvek otázok alebo uplatnenia vašich práv nás môžete kontaktovať na: support@kjuu.sk.
-    </p>
-
-</div>
+</section>
 {% endblock %}
-

@@ -1,20 +1,19 @@
-{% extends "queueapp/base.html" %}
+{% extends 'queueapp/base.html' %}
+{% load i18n %}
+{% block title %}{% trans "Delete account" %}{% endblock %}
+
 {% block content %}
-<div class="max-w-md mx-auto mt-10 p-4 bg-white rounded-2xl shadow-md">
-  <h2 class="text-xl font-semibold text-red-600 mb-4 text-center">Zmazať účet</h2>
-  <p class="text-gray-700 text-center mb-6">Naozaj chcete zmazať Váš účet?</p>
+<section class="panel" style="max-width:520px;margin:0 auto;">
+    <p class="kicker">{% trans "Danger zone" %}</p>
+    <h1 class="page-title" style="font-size:1.7rem">{% trans "Delete account permanently" %}</h1>
+    <p class="text-muted">
+        {% trans "This action is irreversible. Your account will be removed immediately." %}
+    </p>
 
-  <form method="post" class="flex flex-col gap-4">
-    {% csrf_token %}
-    <button type="submit" class="bg-red-600 text-white py-2 px-4 rounded hover:bg-red-700 transition duration-300">
-      Áno, natrvalo zmazať
-    </button>
-  </form>
-
-  <div class="mt-4 text-center">
-    <a href="{% url 'queueapp:home' %}" class="text-sm text-gray-500 underline hover:text-gray-700">
-      Zrušiť a vrátiť sa späť
-    </a>
-  </div>
-</div>
+    <form method="post" class="actions-row" style="margin-top:1rem;">
+        {% csrf_token %}
+        <button type="submit" class="btn danger">{% trans "Yes, delete my account" %}</button>
+        <a class="btn neutral" href="{% url 'queueapp:home' %}">{% trans "Cancel" %}</a>
+    </form>
+</section>
 {% endblock %}

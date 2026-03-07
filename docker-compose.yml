@@ -10,7 +10,9 @@ services:
     build: .
     image: ${APP_NAME}:latest 
     env_file: .env
-    command: gunicorn ${APP_NAME}.wsgi:application --bind 0.0.0.0:8000
+    command: >
+      sh -c "python manage.py collectstatic --noinput &&
+             gunicorn ${APP_NAME}.wsgi:application --bind 0.0.0.0:8000"
     user: "1000:1000"
     volumes:
       - ./media:/app/media

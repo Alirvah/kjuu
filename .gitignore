@@ -2,5 +2,8 @@ data/
 logs/
 media/
 .env
+__pycache__/
+*.pyc
+staticfiles/
 
 backup/

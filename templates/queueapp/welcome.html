@@ -1,84 +1,42 @@
 {% extends 'queueapp/base.html' %}
-{% block title %}Welcome{% endblock %}
+{% load i18n %}
+{% block title %}{% trans "Welcome" %}{% endblock %}
 
 {% block content %}
+<section class="panel hero">
+    <p class="kicker" style="color:rgba(255,255,255,.85)">{% trans "Digital queueing" %}</p>
+    <h1 class="page-title">{% trans "Stop waiting in line. Keep your place online." %}</h1>
+    <p class="page-subtitle" style="color:rgba(255,255,255,.93)">
+        {% trans "Enter the queue code to join instantly and track your turn from any device." %}
+    </p>
+</section>
 
-  	<section class="relative bg-white overflow-hidden">
-  	  <div class="relative max-w-4xl mx-auto px-6 py-16 text-center">
-  	    <h2 class="text-4xl font-extrabold text-gray-900 mb-4">🕒 Virtuálny rad - digitálne riešenie</h2>
-  	    <p class="text-lg text-gray-700 mb-8">Zjednodušte čakanie, rezervujte si miesto v rade online a získajte aktuálne informácie o svojom poradí.</p>
-  			<section class="mx-auto max-w-sm bg-white shadow-lg rounded-md p-6 mb-12">
-  			  	<form method="post" action="{% url 'queueapp:go_to_queue' %}" class="space-y-4">
-			  	  {% csrf_token %}
-  			  	  <input
-  			  	    type="text" name="queue_id" id="queue_id" maxlength="4" placeholder="Kód radu"
-  			  	    class="w-full p-3 text-center border-2 border-gray-200 rounded-md placeholder-gray-400 focus:outline-none focus:border-blue-500 transition uppercase" required>
-  			  	  <button type="submit" class="w-full shadow-md py-3 bg-blue-600 text-white font-semibold rounded-md shadow hover:bg-blue-700 transition">Vstúpiť do radu</button>
-  			  	</form>
+<section class="panel">
+    <div class="grid two">
+        <div>
+            <h2>{% trans "Join a queue" %}</h2>
+            <p class="text-muted">{% trans "Use a 4-character queue code from the provider." %}</p>
+            <form method="post" action="{% url 'queueapp:go_to_queue' %}" class="form-stack">
+                {% csrf_token %}
+                <div>
+                    <label for="queue_id">{% trans "Queue code" %}</label>
+                    <input class="input uppercase" type="text" name="queue_id" id="queue_id" maxlength="4" required>
+                </div>
+                <button class="btn primary full" type="submit">{% trans "Go to queue" %}</button>
+            </form>
+        </div>
 
-				<div class="flex space-x-4 mt-12">
-    				{% if user.is_authenticated %}
-    				  <a href="{% url 'queueapp:go_to_queue' %}" class="flex-1 shadow-md py-3 bg-green-600 text-white rounded-md text-center font-semibold hover:bg-green-700 transition">Moje miesto v rade</a>
-    				{% endif %}
-				</div>
-  			</section>
-  	    <div class="grid gap-8 sm:grid-cols-2">
-  	      <div class="flex items-start">
-  	        <div class="flex-shrink-0">
-  	          <div class="inline-flex items-center justify-center h-12 w-12 rounded-md bg-blue-600 text-white">
-  	            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h18M3 12h18M3 17h18"/></svg>
-  	          </div>
-  	        </div>
-  	        <div class="ml-4 text-left">
-  	          <h3 class="text-xl font-semibold text-gray-900">Moderný dizajn</h3>
-  	          <p class="mt-2 text-gray-600">Čisté, intuitívne rozhranie šité na mieru mobilným zariadeniam.</p>
-  	        </div>
-  	      </div>
-  	      <div class="flex items-start">
-  	        <div class="flex-shrink-0">
-  	          <div class="inline-flex items-center justify-center h-12 w-12 rounded-md bg-blue-600 text-white">
-  	            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v8m4-4H8"/></svg>
-  	          </div>
-  	        </div>
-  	        <div class="ml-4 text-left">
-  	          <h3 class="text-xl font-semibold text-gray-900">Rýchle upozornenia</h3>
-  	          <p class="mt-2 text-gray-600">Dostávajte okamžité push notifikácie presne vtedy, keď sa blížite na rad.</p>
-  	        </div>
-  	      </div>
-  	      <div class="flex items-start">
-  	        <div class="flex-shrink-0">
-  	          <div class="inline-flex items-center justify-center h-12 w-12 rounded-md bg-blue-600 text-white">
-  	            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-  	          </div>
-  	        </div>
-  	        <div class="ml-4 text-left">
-  	          <h3 class="text-xl font-semibold text-gray-900">Bezproblémové používanie</h3>
-  	          <p class="mt-2 text-gray-600">Žiadna inštalácia, žiadna správa serverov – jednoducho sa prihláste a používajte.</p>
-  	        </div>
-  	      </div>
-  	      <div class="flex items-start">
-  	        <div class="flex-shrink-0">
-  	          <div class="inline-flex items-center justify-center h-12 w-12 rounded-md bg-blue-600 text-white">
-  	            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h8m-8 4h6"/></svg>
-  	          </div>
-  	        </div>
-  	        <div class="ml-4 text-left">
-  	          <h3 class="text-xl font-semibold text-gray-900">Škálovateľnosť</h3>
-  	          <p class="mt-2 text-gray-600">Navrhnuté pre malé podniky aj veľké organizácie – rastie s vami.</p>
-  	        </div>
-  	      </div>
-  	    </div>
-	{% include "queueapp/description.html" %}
-  	  </div>
-  	</section>
-
-
-    <div class="flex justify-center items-center">
-        <div class="text-center p-4 max-w-md w-full">
-
+        <div class="metric-card">
+            <h3>{% trans "Why kjuu" %}</h3>
+            <ul>
+                <li>{% trans "No app install required" %}</li>
+                <li>{% trans "Real-time queue position" %}</li>
+                <li>{% trans "QR-friendly onboarding" %}</li>
+                <li>{% trans "Owner dashboard with serve controls" %}</li>
+            </ul>
         </div>
     </div>
+</section>
 
-
+{% include 'queueapp/description.html' %}
 {% endblock %}
-

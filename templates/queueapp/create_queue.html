@@ -1,26 +1,29 @@
 {% extends 'queueapp/base.html' %}
-{% block title %}Create Queue{% endblock %}
+{% load i18n %}
+{% block title %}{% trans "Create Queue" %}{% endblock %}
 
 {% block content %}
-    <div class="max-w-xl mx-auto space-y-8">
-        <h2 class="text-2xl font-semibold text-gray-900">Vytvorte svoj vlastný rad</h2>
-  		<p class="text-lg">Vyplňte názov radu a začnite prijímať ľudí do svojho radu online.</p>
+<section class="panel hero">
+    <p class="kicker" style="color:rgba(255,255,255,.85)">{% trans "Owner setup" %}</p>
+    <h1 class="page-title">{% trans "Create your virtual queue" %}</h1>
+    <p class="page-subtitle" style="color:rgba(255,255,255,.93)">{% trans "Choose a short public name. A QR PDF will be generated automatically." %}</p>
+</section>
 
-        <form method="post" action="{% url 'queueapp:create_queue' %}" class="space-y-4">
-            {% csrf_token %}
-			<label for="queue_id" class="block text-lg font-medium text-gray-700">Názov radu:</label>
-			<input type="text" name="name" id="name" required class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+<section class="panel" style="max-width:700px;margin:0 auto;">
+    <form method="post" action="{% url 'queueapp:create_queue' %}" class="form-stack">
+        {% csrf_token %}
+        <div>
+            <label for="name">{% trans "Queue name" %}</label>
+            <input class="input" type="text" name="name" id="name" value="{{ form.name.value|default:'' }}" required>
             {% if form.name.errors %}
-                <div class="text-red-500">
+                <ul class="error-list">
                     {% for error in form.name.errors %}
-                        <p>{{ error }}</p>
+                        <li>{{ error }}</li>
                     {% endfor %}
-                </div>
+                </ul>
             {% endif %}
-            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md transition" required>Vytvoriť</button>
-        </form>
-    </div>
+        </div>
+        <button type="submit" class="btn primary">{% trans "Create queue" %}</button>
+    </form>
+</section>
 {% endblock %}
-
-
-

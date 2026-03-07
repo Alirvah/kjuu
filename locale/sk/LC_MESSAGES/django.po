@@ -1,0 +1,495 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: kjuu\n"
+"POT-Creation-Date: 2026-03-07 00:00+0000\n"
+"PO-Revision-Date: 2026-03-07 00:00+0000\n"
+"Last-Translator: kjuu\n"
+"Language-Team: Slovak\n"
+"Language: sk\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\n"
+
+msgid "Virtual Queue"
+msgstr "Virtuálny rad"
+
+msgid "Log out"
+msgstr "Odhlásiť sa"
+
+msgid "Log in"
+msgstr "Prihlásiť sa"
+
+msgid "Sign up"
+msgstr "Registrovať sa"
+
+msgid "Terms"
+msgstr "Podmienky"
+
+msgid "Privacy"
+msgstr "Súkromie"
+
+msgid "Feature overview"
+msgstr "Prehľad funkcií"
+
+msgid "What you can do with kjuu"
+msgstr "Čo môžete robiť s kjuu"
+
+msgid "Create a queue"
+msgstr "Vytvoriť rad"
+
+msgid "A signed-in user can create one virtual queue and manage it from a single dashboard."
+msgstr "Prihlásený používateľ môže vytvoriť jeden virtuálny rad a spravovať ho z jedného dashboardu."
+
+msgid "Join instantly"
+msgstr "Okamžité pripojenie"
+
+msgid "Customers join by queue code or QR and immediately get a live position."
+msgstr "Zákazníci sa pripoja cez kód radu alebo QR a okamžite získajú aktuálne poradie."
+
+msgid "Serve fairly"
+msgstr "Spravodlivé obslúženie"
+
+msgid "Customers are served in FIFO order with wait-time tracking and optional encrypted note."
+msgstr "Zákazníci sú obsluhovaní vo FIFO poradí so sledovaním času čakania a voliteľnou šifrovanou poznámkou."
+
+msgid "Welcome"
+msgstr "Vitajte"
+
+msgid "Digital queueing"
+msgstr "Digitálne radenie"
+
+msgid "Stop waiting in line. Keep your place online."
+msgstr "Prestaňte čakať v rade. Držte si miesto online."
+
+msgid "Enter the queue code to join instantly and track your turn from any device."
+msgstr "Zadajte kód radu, pripojte sa okamžite a sledujte svoje poradie z ľubovoľného zariadenia."
+
+msgid "Join a queue"
+msgstr "Pripojiť sa do radu"
+
+msgid "Use a 4-character queue code from the provider."
+msgstr "Použite 4-znakový kód radu od poskytovateľa."
+
+msgid "Queue code"
+msgstr "Kód radu"
+
+msgid "Go to queue"
+msgstr "Prejsť do radu"
+
+msgid "Why kjuu"
+msgstr "Prečo kjuu"
+
+msgid "No app install required"
+msgstr "Bez inštalácie aplikácie"
+
+msgid "Real-time queue position"
+msgstr "Poradie v reálnom čase"
+
+msgid "QR-friendly onboarding"
+msgstr "Jednoduché pripojenie cez QR"
+
+msgid "Owner dashboard with serve controls"
+msgstr "Dashboard vlastníka s ovládaním obsluhy"
+
+msgid "Dashboard"
+msgstr "Nástenka"
+
+msgid "Member area"
+msgstr "Používateľská zóna"
+
+msgid "Your queue workspace"
+msgstr "Váš priestor pre rady"
+
+msgid "Manage your queue, or track your active waiting position."
+msgstr "Spravujte svoj rad alebo sledujte svoje aktívne poradie."
+
+msgid "You own a queue"
+msgstr "Vlastníte rad"
+
+msgid "Queue code: %(code)s"
+msgstr "Kód radu: %(code)s"
+
+msgid "Open owner dashboard"
+msgstr "Otvoriť dashboard vlastníka"
+
+msgid "You are currently waiting"
+msgstr "Momentálne čakáte"
+
+msgid "Open live position"
+msgstr "Otvoriť živé poradie"
+
+msgid "Join or create"
+msgstr "Pripojte sa alebo vytvorte"
+
+msgid "Join queue"
+msgstr "Pripojiť sa do radu"
+
+msgid "Create your own queue"
+msgstr "Vytvorte vlastný rad"
+
+msgid "For clinics, services, events and stores."
+msgstr "Pre ambulancie, služby, podujatia a obchody."
+
+msgid "Create queue"
+msgstr "Vytvoriť rad"
+
+msgid "Account"
+msgstr "Účet"
+
+msgid "If you no longer wish to use the service, you can permanently delete your account."
+msgstr "Ak už nechcete službu používať, môžete svoj účet natrvalo zmazať."
+
+msgid "Delete account"
+msgstr "Zmazať účet"
+
+msgid "Create Queue"
+msgstr "Vytvoriť rad"
+
+msgid "Owner setup"
+msgstr "Nastavenie vlastníka"
+
+msgid "Create your virtual queue"
+msgstr "Vytvorte svoj virtuálny rad"
+
+msgid "Choose a short public name. A QR PDF will be generated automatically."
+msgstr "Vyberte krátky verejný názov. QR PDF sa vygeneruje automaticky."
+
+msgid "Queue name"
+msgstr "Názov radu"
+
+msgid "Authentication"
+msgstr "Overenie"
+
+msgid "Log in to your account"
+msgstr "Prihláste sa do účtu"
+
+msgid "Username"
+msgstr "Používateľské meno"
+
+msgid "Password"
+msgstr "Heslo"
+
+msgid "No account yet?"
+msgstr "Ešte nemáte účet?"
+
+msgid "Create one"
+msgstr "Vytvoriť účet"
+
+msgid "Registration"
+msgstr "Registrácia"
+
+msgid "Create your account"
+msgstr "Vytvorte si účet"
+
+msgid "I agree with"
+msgstr "Súhlasím s"
+
+msgid "and"
+msgstr "a"
+
+msgid "Already registered?"
+msgstr "Máte už účet?"
+
+msgid "Danger zone"
+msgstr "Nebezpečná zóna"
+
+msgid "Delete account permanently"
+msgstr "Natrvalo zmazať účet"
+
+msgid "This action is irreversible. Your account will be removed immediately."
+msgstr "Táto akcia je nevratná. Váš účet bude okamžite odstránený."
+
+msgid "Yes, delete my account"
+msgstr "Áno, zmazať účet"
+
+msgid "Cancel"
+msgstr "Zrušiť"
+
+msgid "Queue"
+msgstr "Rad"
+
+msgid "Live queue"
+msgstr "Živý rad"
+
+msgid "It is your turn."
+msgstr "Ste na rade."
+
+msgid "Show this unique code to staff:"
+msgstr "Ukážte personálu tento jedinečný kód:"
+
+msgid "Time since called"
+msgstr "Čas od zavolania"
+
+msgid "Total waiting time"
+msgstr "Celkový čas čakania"
+
+msgid "Current position"
+msgstr "Aktuálne poradie"
+
+msgid "Please prepare, you are next."
+msgstr "Pripravte sa, ste na rade ako ďalší."
+
+msgid "Keep this page open to track updates."
+msgstr "Nechajte túto stránku otvorenú pre aktuálne zmeny."
+
+msgid "Leave queue"
+msgstr "Opustiť rad"
+
+msgid "Joined at"
+msgstr "Zaradený"
+
+msgid "Join this queue"
+msgstr "Pripojiť sa do tohto radu"
+
+msgid "After joining, you will receive a live position and identification code."
+msgstr "Po pripojení získate aktuálne poradie a identifikačný kód."
+
+msgid "People currently waiting: %(count)s"
+msgstr "Aktuálne čaká ľudí: %(count)s"
+
+msgid "Encrypted note"
+msgstr "Šifrovaná poznámka"
+
+msgid "Optional note is encrypted end-to-end. It is readable only by you and the queue owner."
+msgstr "Voliteľná poznámka je šifrovaná end-to-end. Čitateľná je iba pre vás a vlastníka radu."
+
+msgid "Edit note"
+msgstr "Upraviť poznámku"
+
+msgid "Note"
+msgstr "Poznámka"
+
+msgid "Type note..."
+msgstr "Napíšte poznámku..."
+
+msgid "Save note"
+msgstr "Uložiť poznámku"
+
+msgid "Hide editor"
+msgstr "Skryť editor"
+
+msgid "Queue owner has not enabled encrypted notes yet."
+msgstr "Vlastník radu ešte nepovolil šifrované poznámky."
+
+msgid "Unable to initialize secure key."
+msgstr "Nepodarilo sa inicializovať bezpečnostný kľúč."
+
+msgid "Unable to register customer key."
+msgstr "Nepodarilo sa zaregistrovať zákaznícky kľúč."
+
+msgid "Owner Dashboard"
+msgstr "Dashboard vlastníka"
+
+msgid "Queue owner"
+msgstr "Vlastník radu"
+
+msgid "Average wait"
+msgstr "Priemerné čakanie"
+
+msgid "Served customers"
+msgstr "Obslúžení zákazníci"
+
+msgid "Copy join link"
+msgstr "Skopírovať odkaz"
+
+msgid "Call next customer"
+msgstr "Zavolať ďalšieho zákazníka"
+
+msgid "Pause queue"
+msgstr "Pozastaviť rad"
+
+msgid "Resume queue"
+msgstr "Obnoviť rad"
+
+msgid "Delete queue"
+msgstr "Zmazať rad"
+
+msgid "Join link copied."
+msgstr "Odkaz na pripojenie bol skopírovaný."
+
+msgid "Unable to copy link on this device."
+msgstr "Na tomto zariadení sa odkaz nedá skopírovať."
+
+msgid "Currently called"
+msgstr "Aktuálne volaný"
+
+msgid "Now serving"
+msgstr "Práve obsluhujeme"
+
+msgid "Called"
+msgstr "Zavolaný"
+
+msgid "Waited"
+msgstr "Čakal"
+
+msgid "Code"
+msgstr "Kód"
+
+msgid "Decrypting..."
+msgstr "Dešifrovanie..."
+
+msgid "Waiting customers"
+msgstr "Čakajúci zákazníci"
+
+msgid "Joined"
+msgstr "Zaradený"
+
+msgid "No one is currently waiting in this queue."
+msgstr "V tomto rade momentálne nikto nečaká."
+
+msgid "Unable to decrypt"
+msgstr "Nepodarilo sa dešifrovať"
+
+msgid "Privacy Policy"
+msgstr "Zásady ochrany osobných údajov"
+
+msgid "1. Data controller"
+msgstr "1. Prevádzkovateľ údajov"
+
+msgid "2. Categories of processed data"
+msgstr "2. Kategórie spracúvaných údajov"
+
+msgid "3. Purposes and legal bases"
+msgstr "3. Účely a právne základy"
+
+msgid "4. End-to-end encrypted notes"
+msgstr "4. End-to-end šifrované poznámky"
+
+msgid "5. Data retention"
+msgstr "5. Uchovávanie údajov"
+
+msgid "6. Recipients and transfers"
+msgstr "6. Príjemcovia a prenosy"
+
+msgid "7. Cookies and session"
+msgstr "7. Cookies a relácia"
+
+msgid "8. Data subject rights"
+msgstr "8. Práva dotknutej osoby"
+
+msgid "9. Contact"
+msgstr "9. Kontakt"
+
+msgid "10. Updates"
+msgstr "10. Aktualizácie"
+
+msgid "Terms of Service"
+msgstr "Podmienky používania"
+
+msgid "1. Service description"
+msgstr "1. Popis služby"
+
+msgid "2. Accounts and eligibility"
+msgstr "2. Účty a oprávnenosť"
+
+msgid "3. Acceptable use"
+msgstr "3. Prípustné používanie"
+
+msgid "4. Queue operation rules"
+msgstr "4. Pravidlá prevádzky radu"
+
+msgid "5. Availability and changes"
+msgstr "5. Dostupnosť a zmeny"
+
+msgid "6. Liability"
+msgstr "6. Zodpovednosť"
+
+msgid "7. Privacy"
+msgstr "7. Súkromie"
+
+msgid "8. Governing context"
+msgstr "8. Právny rámec"
+
+msgid "Read Privacy Policy"
+msgstr "Prečítať zásady ochrany osobných údajov"
+
+msgid "For legal or service questions, contact: support@kjuu.sk"
+msgstr "Pre právne alebo servisné otázky kontaktujte: support@kjuu.sk"
+
+msgid "You must agree to the Terms and Privacy Policy."
+msgstr "Musíte súhlasiť s Podmienkami a Zásadami ochrany osobných údajov."
+
+msgid "Invalid credentials."
+msgstr "Neplatné prihlasovacie údaje."
+
+msgid "To delete your account, first leave or delete your active queue."
+msgstr "Pred zmazaním účtu najprv opustite alebo zmažte svoj aktívny rad."
+
+msgid "Your account has been deleted."
+msgstr "Váš účet bol zmazaný."
+
+msgid "Too many requests. Please try again later."
+msgstr "Príliš veľa požiadaviek. Skúste to neskôr."
+
+msgid "Please enter a queue code."
+msgstr "Zadajte kód radu."
+
+msgid "Queue with code %(code)s was not found."
+msgstr "Rad s kódom %(code)s sa nenašiel."
+
+msgid "You already own a queue."
+msgstr "Už vlastníte virtuálny rad."
+
+msgid "Scan this QR code to join the virtual queue:"
+msgstr "Naskenujte tento QR kód pre pripojenie do virtuálneho radu:"
+
+msgid "You cannot join your own queue as a customer."
+msgstr "Nemôžete sa pripojiť do vlastného radu ako zákazník."
+
+msgid "Queue is paused. New customers cannot join right now."
+msgstr "Rad je pozastavený. Noví zákazníci sa teraz nemôžu pripojiť."
+
+msgid "You are already in queue %(code)s. Leave it before joining another."
+msgstr "Už sa nachádzate v rade %(code)s. Pred pripojením do iného ho opustite."
+
+msgid "You have left virtual queue %(code)s."
+msgstr "Opustili ste virtuálny rad %(code)s."
+
+msgid "You cannot delete a queue that is not empty."
+msgstr "Nemôžete zmazať rad, ktorý nie je prázdny."
+
+msgid "Queue has been deleted."
+msgstr "Rad bol zmazaný."
+
+msgid "Queue has been resumed."
+msgstr "Rad bol obnovený."
+
+msgid "Queue has been paused. New customers cannot join."
+msgstr "Rad bol pozastavený. Noví zákazníci sa nemôžu pripojiť."
+
+msgid "QR code PDF for this queue does not exist."
+msgstr "QR PDF pre tento rad neexistuje."
+
+msgid "Expected JSON request body."
+msgstr "Očakáva sa JSON telo požiadavky."
+
+msgid "Invalid JSON payload."
+msgstr "Neplatný JSON obsah."
+
+msgid "Missing or invalid public_key."
+msgstr "Chýba alebo je neplatný parameter public_key."
+
+msgid "Payload must be a JSON object."
+msgstr "Obsah musí byť JSON objekt."
+
+msgid "Payload must contain string fields 'to_owner' and 'to_customer'."
+msgstr "Obsah musí obsahovať textové polia 'to_owner' a 'to_customer'."
+
+msgid "Queue owner public key is missing. Register owner key first."
+msgstr "Chýba verejný kľúč vlastníka radu. Najprv zaregistrujte kľúč vlastníka."
+
+msgid "Customer public key is missing. Register customer key first."
+msgstr "Chýba verejný kľúč zákazníka. Najprv zaregistrujte kľúč zákazníka."
+
+msgid "Encrypted fields cannot be empty."
+msgstr "Šifrované polia nesmú byť prázdne."
+
+msgid "You are not the owner of this queue."
+msgstr "Nie ste vlastníkom tohto radu."
+
+msgid "Username must be at least 4 characters."
+msgstr "Používateľské meno musí mať aspoň 4 znaky."
+
+msgid "Username must be at most 31 characters."
+msgstr "Používateľské meno môže mať najviac 31 znakov."

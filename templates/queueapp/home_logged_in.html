@@ -1,67 +1,57 @@
 {% extends 'queueapp/base.html' %}
-{% block title %}Dashboard{% endblock %}
+{% load i18n %}
+{% block title %}{% trans "Dashboard" %}{% endblock %}
 
 {% block content %}
-    <div class="max-w-3xl mx-auto space-y-8">
+<section class="panel hero">
+    <p class="kicker" style="color:rgba(255,255,255,.85)">{% trans "Member area" %}</p>
+    <h1 class="page-title">{% trans "Your queue workspace" %}</h1>
+    <p class="page-subtitle" style="color:rgba(255,255,255,.93)">
+        {% trans "Manage your queue, or track your active waiting position." %}
+    </p>
+</section>
 
-        <div class="max-w-4xl lg:max-w-5xl xl:max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
-          <h1 class="text-3xl font-bold text-center text-gray-800 mb-6">🕒 Digitálna správa virtuálnych radov</h1>
-          <p class="text-gray-700 text-center">
-            <span class="font-semibold">kjuu.sk</span> je moderná, <span class="text-blue-600 font-semibold">digital-first</span> aplikácia na správu virtuálnych radov.
-            Funguje ako <span class="text-blue-600 font-semibold">plne samoobslužné SaaS riešenie</span> bez potreby inštalácie alebo technickej správy – stačí sa prihlásiť a používať.
-          </p>
+<section class="panel">
+    {% if user_queue %}
+        <h2>{% trans "You own a queue" %}</h2>
+        <p class="text-muted">{% blocktrans with code=user_queue.short_id %}Queue code: {{ code }}{% endblocktrans %}</p>
+        <div class="actions-row">
+            <a class="btn primary" href="{% url 'queueapp:queue_dashboard' user_queue.short_id %}">{% trans "Open owner dashboard" %}</a>
         </div>
-
-        {% if user_queue %}
-			<div class="flex justify-between">
-            <a href="{% url 'queueapp:queue_dashboard' user_queue.short_id %}" class="w-full bg-green-600 shadow-md hover:bg-blue-700 text-white py-2 px-4 rounded-md transition text-center">
-                Váš virtuálny rad
-            </a>
-            </div>
-        {% else %}
-        	{% if active_customer %}
-        	    <p class="text-lg text-center">Práve sa nachádzate v rade:</p>
-				<div class="flex justify-between">
-        	    	<a href="{% url 'queueapp:join_queue' active_customer.queue.short_id %}" class="w-full shadow-md bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-md transition text-center">
-        	    	    {{ active_customer.queue.name }}
-        	    	</a>
-				</div>
-        	{% else %}
-				<div class="flex justify-between">
-    				<form method="post" action="{% url 'queueapp:go_to_queue' %}" class="w-full space-y-2">
-        				{% csrf_token %}
-    				    <input type="text" name="queue_id" id="queue_id" maxlength="4" placeholder="kód virtuálneho radu" required
-    				           class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-    				           style="text-transform: uppercase;">
-    				    <button type="submit" class="w-full shadow-md bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md transition">Postaviť sa do radu</button>
-    				</form>
-				</div>
-        		<p class="text-gray-700 text-center"> ✨ Zjednodušte čakanie, rezervujte si miesto v rade online a získajte aktuálne informácie o svojom poradí.  </p>
-        	{% endif %}
-
-         {% endif %}
-
-		{% if not user_queue and not active_customer %}
-			<div class="flex justify-between">
-            	<a href="{% url 'queueapp:create_queue' %}" class="w-full shadow-md bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-md transition text-center"> Vytvoriť rad </a>
-            </div>
-        	<p class="text-gray-700 text-center"> 📋 Vytvorte si vlastný rad pre svojich zákazníkov, a získajte aktuálny prehľad o ich poradí v rade.  </p>
-		{% endif %}
-
-		{% include "queueapp/description.html" %}
-
-    	<hr class="my-4">
-
-        {% if user.is_authenticated %}
-            <form method="post" action="{% url 'queueapp:logout' %}" class="inline">
+    {% elif active_customer %}
+        <h2>{% trans "You are currently waiting" %}</h2>
+        <p class="text-muted">{{ active_customer.queue.name }}</p>
+        <div class="actions-row">
+            <a class="btn primary" href="{% url 'queueapp:join_queue' active_customer.queue.short_id %}">{% trans "Open live position" %}</a>
+        </div>
+    {% else %}
+        <h2>{% trans "Join or create" %}</h2>
+        <div class="grid two">
+            <form method="post" action="{% url 'queueapp:go_to_queue' %}" class="form-stack panel" style="padding:1rem">
                 {% csrf_token %}
-                <button type="submit" class="w-full shadow-md my-4 text-white bg-red-500 px-3 py-1 rounded">Odhlásiť sa</button>
+                <div>
+                    <label for="queue_id">{% trans "Queue code" %}</label>
+                    <input type="text" name="queue_id" id="queue_id" maxlength="4" class="input uppercase" required>
+                </div>
+                <button type="submit" class="btn primary full">{% trans "Join queue" %}</button>
             </form>
-		{% endif %}
 
-		
-        <p class="text my-4">Ak si už neželáte pokračovať, <a class="underline" href="{% url 'queueapp:delete_account' %}">tu</a> môžeťe zmazať svoj účet.</p>
+            <div class="panel" style="padding:1rem;background:var(--panel-soft)">
+                <h3 style="margin-top:0">{% trans "Create your own queue" %}</h3>
+                <p class="text-muted">{% trans "For clinics, services, events and stores." %}</p>
+                <a class="btn success" href="{% url 'queueapp:create_queue' %}">{% trans "Create queue" %}</a>
+            </div>
+        </div>
+    {% endif %}
+</section>
 
-    </div>
+<section class="panel">
+    <h3>{% trans "Account" %}</h3>
+    <p class="text-muted">
+        {% trans "If you no longer wish to use the service, you can permanently delete your account." %}
+        <a href="{% url 'queueapp:delete_account' %}">{% trans "Delete account" %}</a>
+    </p>
+</section>
+
+{% include 'queueapp/description.html' %}
 {% endblock %}
-

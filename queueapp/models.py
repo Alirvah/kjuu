@@ -30,7 +30,7 @@ class Queue(models.Model):
 
     @staticmethod
     def generate_unique_short_id():
-        allowed = allowed = 'ACDEFGHJKLMNPQRSTUVWXYZ234679'
+        allowed = "ACDEFGHJKLMNPQRSTUVWXYZ234679"
         while True:
             code = ''.join(secrets.choice(allowed) for _ in range(4))
             if not Queue.objects.filter(short_id=code).exists():
@@ -85,4 +85,3 @@ class Customer(models.Model):
 
     def __str__(self):
         return f"{self.user.username} in {self.queue.short_id}"
-

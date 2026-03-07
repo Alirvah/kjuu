@@ -1,265 +1,288 @@
-<!-- join_queue.html -->
 {% extends 'queueapp/base.html' %}
+{% load i18n time_filters tz %}
+{% block title %}{% trans "Queue" %} {{ queue.short_id }}{% endblock %}
 
 {% block content %}
-    <div class="max-w-xl mx-auto space-y-8">
-		<div class="flex items-center justify-center">
-            {% if user.active_customer and queue %}
-        		<a href="{% url 'queueapp:leave_queue' queue.short_id %}" class="bg-red-500 shadow-md hover:bg-red-700 text-white py-2 px-4 rounded-md transition">Opustiť rad</a>
-			{% else %}
-        		<h2 class="text-2xl font-semibold text-gray-900">Pridať sa do radu</h2>
-			{% endif %}
-		</div>
+<section class="panel hero">
+    <p class="kicker" style="color:rgba(255,255,255,.85)">{% trans "Live queue" %}</p>
+    <h1 class="page-title">{{ queue.name }}</h1>
+    <p class="page-subtitle" style="color:rgba(255,255,255,.93)">
+        {% blocktrans with code=queue.short_id %}Queue code: {{ code }}{% endblocktrans %}
+    </p>
+</section>
 
-        {% if user.active_customer %}
-            {% if user.active_customer.called_at %}
-                <p class="text-4xl flex items-center justify-center text-green-600 font-semibold">✅ Ste na rade!</p>
-				{% load i18n %}
-                {% load time_filters %}
-				{% language 'sk' %}
-	    		<p class="text-sm flex items-center justify-center">⏳ Čas od zavolania: <span x-text="elapsed"> {{ user.active_customer.called_at|timesince_display }}</span></p>
-        		<div class="text-2xl flex items-center justify-center">🔐 Unikátny kód:</div>
-				<code class="text-6xl flex items-center justify-center bg-gray-200 p-1 rounded">{{ user.active_customer.secret_id }}</code>
-	    		<p class="text-sm flex items-center justify-center">⏳ Čas stráveny v rade: <span x-text="elapsed"> {{ user.active_customer.wait_time|timedelta_display }}</span></p>
-	    		<p class="text-sm flex items-center justify-center">⏱️ Čas zavolania: <span x-text="elapsed"> {{ user.active_customer.called_at }}</span></p>
-				{% endlanguage %}
-            {% else %}
-        		<div class="text-sm text-center">Práve čakáte vo virtuálnom rade <strong> {{ user.active_customer.queue.name }}</strong>. Sledujte svoje poradie – čoskoro prídete na rad!</div>
-				<div class="text-9xl font-bold flex items-center justify-center">{{ user.active_customer.position }}</div>
+<section class="panel" id="queue-status-panel">
+    {% if user.active_customer %}
+        {% if user.active_customer.called_at %}
+            <h2 class="text-center">{% trans "It is your turn." %}</h2>
+            <p class="text-center text-muted">{% trans "Show this unique code to staff:" %}</p>
+            <p class="text-center"><code class="code-badge">{{ user.active_customer.secret_id }}</code></p>
+            <div class="info-list text-center text-small text-muted">
+                <p>{% trans "Time since called" %}: {{ user.active_customer.called_at|timesince_display }}</p>
+                <p>{% trans "Total waiting time" %}: {{ user.active_customer.wait_time|timesince_display }}</p>
+            </div>
+        {% else %}
+            <p class="kicker text-center">{% trans "Current position" %}</p>
+            <p class="queue-number">{{ user.active_customer.position }}</p>
+            <p class="text-center text-muted">
                 {% if user.active_customer.position == 1 %}
-					<div class="text-2xl text-center font-bold flex items-center justify-center">Pripravte sa, o chvíľu Vás zavoláme!</div>
-				{% else %}
-					<div class="text-1xl flex items-center justify-center">Toto je Vaše aktuálne poradie</div>
-				{% endif %}
-				
-            {% endif %}
+                    {% trans "Please prepare, you are next." %}
+                {% else %}
+                    {% trans "Keep this page open to track updates." %}
+                {% endif %}
+            </p>
 
-		{% else %}
-        	<form method="post" class="space-y-4">
-        	    {% csrf_token %}
-				<p>Chystáte sa pripojiť do radu <strong>{{ queue.name }}</strong>.  </p>
-				<p>Po pripojení získate svoje miesto v poradí a unikátny kód, ktorý Vám umožní byť identifikovaný pri obsluhe.</p>
-                {% if waiting_customers %}
-					<p class="flex items-center justify-center">Aktuálny&nbsp;<strong>počet ľudí</strong>&nbsp;v rade:&nbsp;<strong>{{ waiting_customers }}</strong>.</p>
-				{% endif %}
-        	    <button type="submit" class="w-full shadow-md bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md transition">Zaradiť sa</button>
-        	</form>
+            <form method="post" action="{% url 'queueapp:leave_queue' queue.short_id %}" class="text-center" style="margin-top:1rem;">
+                {% csrf_token %}
+                <button type="submit" class="btn danger">{% trans "Leave queue" %}</button>
+            </form>
+
+            {% timezone "Europe/Bratislava" %}
+                <p class="text-center text-small text-muted" style="margin-top:1rem;">
+                    {% trans "Joined at" %}: {{ user.active_customer.created_at|date:"H:i - d.m.Y" }}
+                </p>
+            {% endtimezone %}
+        {% endif %}
+    {% else %}
+        <h2>{% trans "Join this queue" %}</h2>
+        <p class="text-muted">{% trans "After joining, you will receive a live position and identification code." %}</p>
+        {% if waiting_customers %}
+            <p class="text-small text-muted">
+                {% blocktrans with count=waiting_customers %}People currently waiting: {{ count }}{% endblocktrans %}
+            </p>
         {% endif %}
 
-		<hr class="my-4"/>
+        <form method="post" class="form-stack" style="margin-top:1rem;">
+            {% csrf_token %}
+            <button type="submit" class="btn primary">{% trans "Join queue" %}</button>
+        </form>
+    {% endif %}
+</section>
 
+{% if user.active_customer and not user.active_customer.called_at %}
+<section class="panel" id="secure-note-panel">
+    <h3>{% trans "Encrypted note" %}</h3>
+    <p class="text-muted text-small">
+        {% trans "Optional note is encrypted end-to-end. It is readable only by you and the queue owner." %}
+    </p>
 
-		{% if user.active_customer and not user.active_customer.called_at %}
-
-        	{% load tz %}
-			{% timezone "Europe/Prague" %}
-        		<p class="text-sm text-center text-gray-500">Zaradený o {{ user.active_customer.created_at|date:"H:i - d.m.Y" }}</p>
-			{% endtimezone %}
-
-			<!--
- 			<p class="text-sm text-gray-500">Poznámka:</p>
-        	<form method="post" class="space-yb-4" id="infoForm">
-        	    {% csrf_token %}
-                <input type="text" id="infoInput" value="{{ form.info.value|default_if_none:'' }}" name="info" id="info" maxlength="32" class="w-full p-2 border border-gray-300 rounded-md text-xl">
-        	</form>
-			-->
-
-			<button id="enter-info-btn" class="w-full shadow-md bg-blue-600 text-white py-2 text-center rounded-md transition">Vložiť poznámku</button>
-			<div id="info-form" style="display:none;" class="space-y-8">
-				<textarea id="info-input" maxlength="64" data-info='{{ user.active_customer.info|default_if_none:''|escapejs }}' placeholder="Poznámka..." class="decrypted w-full p-2 border border-gray-300 rounded-md text-xl"></textarea>
-				<button id="info-submit-btn" class="w-full shadow-md bg-blue-600 text-white py-2 text-center rounded-md transition">Odoslať</button>
-  		    	<p x-show="editing" class="text-sm text-gray-400" >Toto pole môžete využiť na doplnenie údajov, ktoré pomôžu poskytovateľovi služby, na ktorú čakáte, lepšie identifikovať osoby v poradovníku a zefektívniť poskytovanie služby. Údaj je 🔐 E2E šifrovaný tzn. čitateľný iba pre Vás a majiteľa radu. Je spracúvaný v súlade s GDPR. Bude uchovávaný len počas čakania v rade a po jeho opustení bude okamžite a nenávratne vymazaný.</p>
-			</div>
-
-		{% endif %}
-
-
+    <div class="actions-row" style="margin-top:.7rem;">
+        <button id="enter-info-btn" class="btn secondary" type="button">{% trans "Edit note" %}</button>
     </div>
 
+    <div id="info-form" style="display:none;margin-top:.8rem;" class="form-stack">
+        <label for="info-input">{% trans "Note" %}</label>
+        <textarea
+            id="info-input"
+            maxlength="64"
+            rows="3"
+            data-info='{{ user.active_customer.info|default_if_none:""|escapejs }}'
+            class="input"
+            placeholder="{% trans 'Type note...' %}"></textarea>
+        <button id="info-submit-btn" class="btn primary" type="button">{% trans "Save note" %}</button>
+    </div>
+</section>
+{% endif %}
 
 <script>
+window.addEventListener("DOMContentLoaded", function () {
+  if (!window.retrievePrivateKey || !window.generateRSAKeyPair) {
+    console.error("crypto.js is not loaded; encrypted note features are unavailable.");
+    return;
+  }
 
+  function getCsrfToken() {
+    const match = document.cookie.match(/(?:^|;\s*)csrftoken=([^;]+)/);
+    if (match) {
+      return decodeURIComponent(match[1]);
+    }
+    return "{{ csrf_token }}";
+  }
 
-    setInterval(function () {
+  function parseInfoPayload(raw) {
+    if (!raw) return null;
 
-        const active = document.activeElement;
-        const isFormInputFocused = active && (
-            active.tagName === 'INPUT' ||
-            active.tagName === 'TEXTAREA' ||
-            active.tagName === 'SELECT' ||
-            active.contentEditable === "true"
-        );
+    try {
+      return JSON.parse(raw);
+    } catch (error) {
+      try {
+        const decoded = raw.replace(/\\u([0-9a-fA-F]{4})/g, function (_m, hex) {
+          return String.fromCharCode(parseInt(hex, 16));
+        });
+        return JSON.parse(decoded);
+      } catch (_secondError) {
+        return null;
+      }
+    }
+  }
 
-        if (!isFormInputFocused) {
-            location.reload();
-        }
-    }, 10000);
+  const panel = document.getElementById("queue-status-panel");
+  if (!panel) {
+    return;
+  }
 
+  setInterval(function () {
+    const active = document.activeElement;
+    const focusedInput = active && (
+      active.tagName === "INPUT" ||
+      active.tagName === "TEXTAREA" ||
+      active.tagName === "SELECT" ||
+      active.isContentEditable
+    );
+    if (!focusedInput) {
+      window.location.reload();
+    }
+  }, 15000);
 
+  const enterBtn = document.getElementById("enter-info-btn");
+  if (!enterBtn) {
+    return;
+  }
 
-	document.addEventListener('DOMContentLoaded', async () => {
-	  const queueShort = "{{ queue.short_id }}";
-	  const serverPub  = "{{ user.active_customer.public_key|default_if_none:'' }}";  // customer pubkey or ''
-	  const ownerPub   = "{{ queue.public_key|default_if_none:'' }}";                 // owner pubkey or ''
-	
-	  async function decryptInfo() {
-	    const block = document.querySelector('[data-info]');
-		if (block) {
-	       const rawInfo = block.dataset.info;
-	       if(!rawInfo) return;
-	       const decodedInfo = rawInfo.replace(/\\u[\dA-F]{4}/gi, match => {
-	         return String.fromCharCode(parseInt(match.replace("\\u", ""), 16));
-	       });
-	       const info = JSON.parse(decodedInfo);
-	       //const out   = block.querySelector('.decrypted');
-	       if (!priv) {
-	         block.value = '[🔒 No key here]';
-	         return;
-	       }
-	       try {
-	         const ct    = base64ToArrayBuffer(info.to_customer);
-	         const text  = await decryptWithPrivateKey(priv, ct);
-	         block.value = text;
-	       } catch (err) {
-	         console.error("Decrypt error for", block.dataset.secret, err);
-	         block.value = '[❌ Error decrypting]';
-	       }
-		}
-	  }
-	
-	  // 1) load any existing private key
-	  let priv = await window.retrievePrivateKey();
-	   
-	
-	  // 2) stale‑key case: we have priv, but server has no pub → regenerate & clear old info
-	  if (priv && !serverPub) {
-	    console.log("🔄 Detected stale key — regenerating & clearing old message…");
-	
-	    // a) delete old private key
-	    await window.deletePrivateKey();
-	
-	    // b) generate new key‑pair & store private
-	    const { publicKey, privateKey } = await window.generateRSAKeyPair();
-	    await window.storePrivateKey(privateKey);
-	
-	    // c) register new public key with server
-	    const pub64 = await window.exportPublicKeyToBase64(publicKey);
-	    await fetch(`/q/${queueShort}/register_key/`, {
-	      method: 'POST',
-	      headers: {
-	        'X-CSRFToken': '{{ csrf_token }}',
-	        'Content-Type': 'application/json'
-	      },
-	      body: JSON.stringify({ public_key: pub64 })
-	    });
-	
-	    // d) clear any old info on server
-	    await fetch(`/q/${queueShort}/clear_info/`, {
-	      method: 'POST',
-	      headers: { 'X-CSRFToken': '{{ csrf_token }}' }
-	    });
-	
-	    // update local priv
-	    priv = privateKey;
-	    console.log("✅ Key regenerated & old message cleared.");
-	  }
-	
-	  // 3) wire up “Enter Info” button
-	  const enterBtn = document.getElementById('enter-info-btn');
-	  if(enterBtn){
-	  	enterBtn.addEventListener('click', () => {
-	
-	  	  const infoForm = document.getElementById('info-form')
-	  	  const isHidden = getComputedStyle(infoForm).display === 'none';
-	
-	  	  if (isHidden) {
-	  	    infoForm.style.display = 'block';
-	  	    enterBtn.textContent = 'Zavrieť';
-	  	    enterBtn.classList.replace('bg-blue-600', 'bg-gray-600');
-			enterBtn.scrollIntoView({ behavior: 'smooth', block: 'start' });
-	  	  } else {
-	  	    infoForm.style.display = 'none';
-	  	    enterBtn.textContent = 'Vložiť poznámku';
-	  	    enterBtn.classList.replace('bg-gray-600', 'bg-blue-600');
-	  	  }
-	
-	  	});
-	  }
-	
-	  decryptInfo();
-	
-	  // 4) handle “Send” click
-	  const submitBtn = document.getElementById('info-submit-btn');
-	  if (submitBtn){
-	  	submitBtn.addEventListener('click', async () => {
-	  	  const text = document.getElementById('info-input').value.trim();
-	  	  if (!text){
-	  	    await fetch(`/q/${queueShort}/clear_info/`, {
-	  	      method: 'POST',
-	  	      headers: { 'X-CSRFToken': '{{ csrf_token }}' }
-	  	    });
-	  	    location.reload();
-	  	  }
-	
-	  	  // — generate a fresh key‑pair & store priv
-	  	  const { publicKey, privateKey } = await window.generateRSAKeyPair();
-	  	  await window.storePrivateKey(privateKey);
-	  	  const custPub64 = await window.exportPublicKeyToBase64(publicKey);
-	
-	  	  // — register customer’s public key
-	  	  await fetch(`/q/${queueShort}/register_key/`, {
-	  	    method: 'POST',
-	  	    headers: {
-	  	      'X-CSRFToken': '{{ csrf_token }}',
-	  	      'Content-Type': 'application/json'
-	  	    },
-	  	    body: JSON.stringify({ public_key: custPub64 })
-	  	  });
-	
-	  	  // — ensure owner is ready
-	  	  if (!ownerPub) {
-	        const block = document.querySelector('[data-info]');
-	        block.value = '[❌ Neplatny kluc]';
-	  	    return;
-	  	  }
-	
-	  	  // — encrypt once for owner, once for customer
-	  	  const ownerKey = await window.importPublicKeyFromBase64(ownerPub);
-	  	  const custKey  = await window.importPublicKeyFromBase64(custPub64);
-	  	  const ct_owner = window.arrayBufferToBase64(
-	  	    await window.encryptWithPublicKey(ownerKey, text)
-	  	  );
-	  	  const ct_cust  = window.arrayBufferToBase64(
-	  	    await window.encryptWithPublicKey(custKey, text)
-	  	  );
-	
-	  	  const infoBlob = JSON.stringify({ to_owner: ct_owner, to_customer: ct_cust });
-	  	  
-	  	  const res = await fetch(`/q/${queueShort}/submit_info/`, {
-	  	    method: 'POST',
-	  	    headers: {
-	  	      'X-CSRFToken': '{{ csrf_token }}',
-	  	      'Content-Type': 'application/json',  
-	  	    },
-	  	    body: infoBlob  
-	  	  });
-	
-	  	  if (!res.ok) {
-	  	    const err = await res.text();
-	  	    return alert(`❌ Failed to save message: ${err}`);
-	  	  }
-	  	  const data = await res.json();
-	  	  if (data.status !== 'ok') {
-	  	    return alert("❌ Unexpected server response.");
-	  	  }
-	
-	  	  // — finally, reload to show the new “Info” badge
-	  	  location.reload();
-	  	});
-	  }
-	});
+  const infoForm = document.getElementById("info-form");
+  const infoInput = document.getElementById("info-input");
+  const submitBtn = document.getElementById("info-submit-btn");
+  const queueShort = "{{ queue.short_id }}";
+  const ownerPub = "{{ queue.public_key|default_if_none:''|escapejs }}";
+  const serverPub = "{{ user.active_customer.public_key|default_if_none:''|escapejs }}";
+  const csrfToken = getCsrfToken();
 
+  async function decryptExistingNote() {
+    if (!infoInput) return;
+    const encoded = infoInput.dataset.info;
+    if (!encoded) return;
 
+    const payload = parseInfoPayload(encoded);
+    if (!payload) {
+      // Backward-compatible fallback for old plaintext notes.
+      infoInput.value = encoded;
+      return;
+    }
+
+    const privateKey = await window.retrievePrivateKey();
+    if (!privateKey || !payload.to_customer) {
+      return;
+    }
+
+    try {
+      const ciphertext = window.base64ToArrayBuffer(payload.to_customer);
+      const plaintext = await window.decryptWithPrivateKey(privateKey, ciphertext);
+      infoInput.value = plaintext;
+    } catch (e) {
+      console.error("Failed to decrypt note", e);
+    }
+  }
+
+  async function ensureCustomerKey() {
+    let privateKey = await window.retrievePrivateKey();
+    if (privateKey && serverPub) {
+      return privateKey;
+    }
+
+    if (privateKey && !serverPub) {
+      await window.deletePrivateKey();
+      privateKey = null;
+    }
+
+    if (!privateKey) {
+      const pair = await window.generateRSAKeyPair();
+      privateKey = pair.privateKey;
+      await window.storePrivateKey(privateKey);
+
+      const publicKey = await window.exportPublicKeyToBase64(pair.publicKey);
+      const registerResponse = await fetch(`/q/${queueShort}/register_key/`, {
+        method: "POST",
+        headers: {
+          "X-CSRFToken": csrfToken,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ public_key: publicKey })
+      });
+      if (!registerResponse.ok) {
+        return null;
+      }
+    }
+
+    return privateKey;
+  }
+
+  enterBtn.addEventListener("click", function () {
+    const hidden = getComputedStyle(infoForm).display === "none";
+    infoForm.style.display = hidden ? "grid" : "none";
+    enterBtn.textContent = hidden ? "{% trans 'Hide editor' %}" : "{% trans 'Edit note' %}";
+  });
+
+  submitBtn.addEventListener("click", async function () {
+    const text = (infoInput.value || "").trim();
+
+    if (!text) {
+      await fetch(`/q/${queueShort}/clear_info/`, {
+        method: "POST",
+        headers: { "X-CSRFToken": csrfToken }
+      });
+      window.location.reload();
+      return;
+    }
+
+    if (!ownerPub) {
+      alert("{% trans 'Queue owner has not enabled encrypted notes yet.' %}");
+      return;
+    }
+
+    const privateKey = await ensureCustomerKey();
+    if (!privateKey) {
+      alert("{% trans 'Unable to initialize secure key.' %}");
+      return;
+    }
+
+    const customerKeyPair = await window.generateRSAKeyPair();
+    await window.storePrivateKey(customerKeyPair.privateKey);
+    const customerPub64 = await window.exportPublicKeyToBase64(customerKeyPair.publicKey);
+
+    const registerResponse = await fetch(`/q/${queueShort}/register_key/`, {
+      method: "POST",
+      headers: {
+        "X-CSRFToken": csrfToken,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ public_key: customerPub64 })
+    });
+    if (!registerResponse.ok) {
+      alert("{% trans 'Unable to register customer key.' %}");
+      return;
+    }
+
+    const ownerKey = await window.importPublicKeyFromBase64(ownerPub);
+    const customerKey = await window.importPublicKeyFromBase64(customerPub64);
+    const encryptedForOwner = window.arrayBufferToBase64(
+      await window.encryptWithPublicKey(ownerKey, text)
+    );
+    const encryptedForCustomer = window.arrayBufferToBase64(
+      await window.encryptWithPublicKey(customerKey, text)
+    );
+
+    const response = await fetch(`/q/${queueShort}/submit_info/`, {
+      method: "POST",
+      headers: {
+        "X-CSRFToken": csrfToken,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        to_owner: encryptedForOwner,
+        to_customer: encryptedForCustomer
+      })
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      alert(errorText);
+      return;
+    }
+
+    window.location.reload();
+  });
+
+  decryptExistingNote();
+});
 </script>
 {% endblock %}
-
