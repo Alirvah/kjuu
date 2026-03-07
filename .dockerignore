@@ -1,0 +1,26 @@
+# Folders to mount instead
+logs/
+data/
+
+backup/
+
+# Python stuff
+__pycache__/
+*.py[cod]
+*.sqlite3
+*.db
+*.log
+
+# Virtualenv
+env/
+venv/
+
+# System/IDE
+.DS_Store
+.idea/
+.vscode/
+
+# Secrets
+.env
+*.key
+*.pem
