@@ -239,6 +239,63 @@ msgstr "Opustiť rad"
 msgid "Joined at"
 msgstr "Zaradený"
 
+msgid "Your metrics"
+msgstr "Vaše metriky"
+
+msgid "Queue insights"
+msgstr "Prehľad radu"
+
+msgid "Tap to expand"
+msgstr "Klepnite pre zobrazenie"
+
+msgid "People ahead of you"
+msgstr "Ľudia pred vami"
+
+msgid "Estimated remaining wait"
+msgstr "Odhad zostávajúceho čakania"
+
+msgid "No wait history yet"
+msgstr "Zatiaľ nie je história čakania"
+
+msgid "Customers currently waiting"
+msgstr "Aktuálne čakajúci zákazníci"
+
+msgid "Historical average wait"
+msgstr "Historický priemerný čas čakania"
+
+msgid "Live queue load"
+msgstr "Aktuálna záťaž radu"
+
+msgid "Queue composition plot"
+msgstr "Graf zloženia radu"
+
+msgid "Queue distribution. Waiting %(waiting)s percent, called %(called)s percent."
+msgstr "Rozloženie radu. Čakajúci %(waiting)s percent, zavolaní %(called)s percent."
+
+msgid "Waiting"
+msgstr "Čakajúci"
+
+msgid "Waiting: %(waiting)s, called: %(called)s"
+msgstr "Čakajúci: %(waiting)s, zavolaní: %(called)s"
+
+msgid "Your position plot"
+msgstr "Graf vašej pozície"
+
+msgid "Ahead"
+msgstr "Pred vami"
+
+msgid "Behind"
+msgstr "Za vami"
+
+msgid "Queue status"
+msgstr "Stav radu"
+
+msgid "Open"
+msgstr "Otvorený"
+
+msgid "Paused"
+msgstr "Pozastavený"
+
 msgid "Join this queue"
 msgstr "Pripojiť sa do tohto radu"
 
@@ -275,6 +332,18 @@ msgstr "Vlastník radu ešte nepovolil šifrované poznámky."
 msgid "Unable to initialize secure key."
 msgstr "Nepodarilo sa inicializovať bezpečnostný kľúč."
 
+msgid "Unable to encrypt note."
+msgstr "Nepodarilo sa zašifrovať poznámku."
+
+msgid "Encrypted note saved."
+msgstr "Šifrovaná poznámka bola uložená."
+
+msgid "Note cleared."
+msgstr "Poznámka bola vymazaná."
+
+msgid "Secure note request failed."
+msgstr "Požiadavka na šifrovanú poznámku zlyhala."
+
 msgid "Unable to register customer key."
 msgstr "Nepodarilo sa zaregistrovať zákaznícky kľúč."
 
@@ -289,6 +358,51 @@ msgstr "Priemerné čakanie"
 
 msgid "Served customers"
 msgstr "Obslúžení zákazníci"
+
+msgid "Live dashboard"
+msgstr "Živý prehľad"
+
+msgid "Longest current wait"
+msgstr "Najdlhšie aktuálne čakanie"
+
+msgid "Estimated time to clear queue"
+msgstr "Odhad času na vyprázdnenie radu"
+
+msgid "No baseline yet"
+msgstr "Zatiaľ nie je dostupný odhad"
+
+msgid "Service pace"
+msgstr "Tempo obsluhy"
+
+msgid "customers/hour"
+msgstr "zákazníkov/hod"
+
+msgid "Queue uptime"
+msgstr "Doba behu radu"
+
+msgid "Queue plots"
+msgstr "Grafy radu"
+
+msgid "Flow distribution"
+msgstr "Rozloženie toku"
+
+msgid "Queue flow. Waiting %(waiting)s percent, called %(called)s percent."
+msgstr "Tok radu. Čakajúci %(waiting)s percent, zavolaní %(called)s percent."
+
+msgid "Wait age distribution"
+msgstr "Rozloženie dĺžky čakania"
+
+msgid "Waiting age. Fresh %(fresh)s percent, medium %(medium)s percent, long %(long)s percent."
+msgstr "Dĺžka čakania. Krátke %(fresh)s percent, stredné %(medium)s percent, dlhé %(long)s percent."
+
+msgid "Fresh (0-5m)"
+msgstr "Krátke (0-5m)"
+
+msgid "Medium (5-15m)"
+msgstr "Stredné (5-15m)"
+
+msgid "Long (15m+)"
+msgstr "Dlhé (15m+)"
 
 msgid "Copy join link"
 msgstr "Skopírovať odkaz"

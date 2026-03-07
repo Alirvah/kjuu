@@ -13,6 +13,7 @@ urlpatterns = [
 	path("delete-account/", views.delete_account, name="delete_account"),
     path('queue/create/', views.create_queue, name='create_queue'),
     path('queue/<str:short_id>/join/', views.join_queue, name='join_queue'),
+    path('queue/<str:short_id>/live/', views.join_queue_live_state, name='join_queue_live_state'),
     path('queue/<str:short_id>/dashboard/', views.queue_dashboard, name='queue_dashboard'),
     path('queue/<str:short_id>/leave/', views.leave_queue, name='leave_queue'),
     path('queue/<str:short_id>/delete/', views.delete_queue, name='delete_queue'),
@@ -25,4 +26,3 @@ urlpatterns = [
     path('q/<slug:short_id>/clear_info/', views.clear_info, name='clear_info'),
 
 ]
-

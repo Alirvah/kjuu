@@ -9,6 +9,7 @@ from datetime import timedelta
 class Queue(models.Model):
     name = models.CharField(max_length=31)
     short_id = models.CharField(max_length=6, unique=True, db_index=True)
+    qr_language = models.CharField(max_length=8, default="sk")
     created_at = models.DateTimeField(auto_now_add=True, null=True)
     color_hex = models.CharField(max_length=7, blank=True, null=True)
     served_count = models.PositiveIntegerField(default=0)
@@ -16,6 +17,7 @@ class Queue(models.Model):
     active = models.BooleanField(default=True)
     qr_code = models.FileField(upload_to='queue_codes/', blank=True, null=True)
     public_key = models.TextField(blank=True, null=True)
+    public_key_version = models.PositiveIntegerField(default=0)
 
     owner = models.OneToOneField( settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='queue')
 
@@ -55,6 +57,7 @@ class Customer(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, null=True)
     info = models.TextField(max_length=1024, blank=True, null=True)
     public_key = models.TextField(blank=True, null=True)
+    public_key_version = models.PositiveIntegerField(default=0)
 
     user = models.OneToOneField( settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='active_customer')
     queue = models.ForeignKey( Queue, on_delete=models.CASCADE, related_name='customers')
@@ -85,3 +88,13 @@ class Customer(models.Model):
 
     def __str__(self):
         return f"{self.user.username} in {self.queue.short_id}"
+
+
+class CustomerNoteNonce(models.Model):
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name="used_nonces")
+    nonce = models.CharField(max_length=64)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("customer", "nonce")
+        ordering = ["-created_at"]

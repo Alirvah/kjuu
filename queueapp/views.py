@@ -1,4 +1,7 @@
 import json
+import re
+from collections.abc import Mapping
+from datetime import timedelta
 
 from django.conf import settings
 from django.contrib import messages
@@ -24,8 +27,13 @@ from django_ratelimit.decorators import ratelimit
 
 from .decorators import require_queue_owner
 from .forms import LoginForm, QueueForm, SignUpForm
-from .models import Customer, Queue
-from .utils import generate_kjuu_pdf
+from .models import Customer, CustomerNoteNonce, Queue
+from .utils import generate_kjuu_pdf, get_pdf_locale_strings, normalize_supported_language
+
+
+MAX_PUBLIC_KEY_LENGTH = 4096
+MAX_CIPHERTEXT_LENGTH = 8192
+NONCE_PATTERN = re.compile(r"^[A-Za-z0-9_-]{16,64}$")
 
 
 def _get_next_url(request):
@@ -52,6 +60,65 @@ def _get_json_payload(request):
         return json.loads(request.body.decode("utf-8")), None
     except (UnicodeDecodeError, json.JSONDecodeError):
         return None, HttpResponseBadRequest(_("Invalid JSON payload."))
+
+
+def _is_htmx_request(request):
+    return request.headers.get("HX-Request") == "true"
+
+
+def _join_queue_context(request, queue):
+    context = {"queue": queue}
+    active_customer = getattr(request.user, "active_customer", None)
+    waiting_count = queue.customers.filter(called_at__isnull=True).count()
+    called_count = queue.customers.filter(called_at__isnull=False).count()
+    total_live_count = waiting_count + called_count
+    has_wait_baseline = queue.served_count > 0
+
+    waiting_pct = int(round((waiting_count / total_live_count) * 100)) if total_live_count else 0
+    called_pct = 100 - waiting_pct if total_live_count else 0
+
+    context.update(
+        {
+            "waiting_customers": waiting_count,
+            "queue_waiting_count": waiting_count,
+            "queue_called_count": called_count,
+            "queue_total_live_count": total_live_count,
+            "queue_waiting_pct": waiting_pct,
+            "queue_called_pct": called_pct,
+            "queue_has_wait_baseline": has_wait_baseline,
+            "queue_average_wait": queue.average_wait_time if has_wait_baseline else None,
+            "queue_is_active": queue.active,
+        }
+    )
+
+    if active_customer and active_customer.queue_id == queue.id and not active_customer.called_at:
+        position = active_customer.position or waiting_count
+        people_ahead = max(position - 1, 0)
+        people_behind = max(waiting_count - position, 0)
+        ahead_pct = int(round((people_ahead / waiting_count) * 100)) if waiting_count else 0
+        behind_pct = max(100 - ahead_pct, 0) if waiting_count else 0
+        context["people_ahead"] = people_ahead
+        context["people_behind"] = people_behind
+        context["people_ahead_pct"] = ahead_pct
+        context["people_behind_pct"] = behind_pct
+        context["estimated_wait"] = queue.average_wait_time * people_ahead if has_wait_baseline else None
+    else:
+        context["people_ahead"] = None
+        context["people_behind"] = None
+        context["people_ahead_pct"] = None
+        context["people_behind_pct"] = None
+        context["estimated_wait"] = None
+    return context
+
+
+def _parse_int_field(value):
+    if isinstance(value, int):
+        return value
+    if isinstance(value, str):
+        text = value.strip()
+        if text.isdigit():
+            return int(text)
+    return None
 
 
 def privacy(request):
@@ -188,13 +255,15 @@ def create_queue(request):
         if form.is_valid():
             queue = form.save(commit=False)
             queue.owner = request.user
+            queue.qr_language = normalize_supported_language(request.LANGUAGE_CODE)
             queue.save()
 
             base_url = request.build_absolute_uri("/").rstrip("/").replace("http://", "https://")
             queue_url = f"{base_url}/queue/go/?queue_id={queue.short_id}"
 
-            qr_message = _("Scan this QR code to join the virtual queue:")
-            title = f"Virtual queue - {settings.DOMAIN_NAME}"
+            pdf_locale = get_pdf_locale_strings(queue.qr_language)
+            qr_message = pdf_locale["default_description"]
+            title = f"{pdf_locale['default_title']} - {settings.DOMAIN_NAME}"
             pdf_buffer = generate_kjuu_pdf(
                 queue_url,
                 title=title,
@@ -240,13 +309,7 @@ def join_queue(request, short_id):
         return redirect("queueapp:join_queue", short_id=active_customer.queue.short_id)
 
     if active_customer and active_customer.queue.short_id == short_id:
-        return render(
-            request,
-            "queueapp/join_queue.html",
-            {
-                "queue": queue,
-            },
-        )
+        return render(request, "queueapp/join_queue.html", _join_queue_context(request, queue))
 
     if request.method == "POST":
         try:
@@ -256,15 +319,25 @@ def join_queue(request, short_id):
             pass
         return redirect("queueapp:join_queue", short_id=short_id)
 
-    waiting_customers = queue.customers.filter(called_at__isnull=True).count()
-    return render(
-        request,
-        "queueapp/join_queue.html",
-        {
-            "queue": queue,
-            "waiting_customers": waiting_customers,
-        },
-    )
+    return render(request, "queueapp/join_queue.html", _join_queue_context(request, queue))
+
+
+@login_required
+@require_http_methods(["GET"])
+def join_queue_live_state(request, short_id):
+    queue = get_object_or_404(Queue, short_id=short_id)
+    active_customer = getattr(request.user, "active_customer", None)
+
+    if request.user == queue.owner:
+        raise Http404(_("Queue owner cannot open customer live state."))
+
+    if active_customer and active_customer.queue.short_id != short_id:
+        raise Http404(_("User is active in another queue."))
+
+    if not active_customer and not queue.active:
+        raise Http404(_("Queue is not available for new customers."))
+
+    return render(request, "queueapp/partials/join_live_shell.html", _join_queue_context(request, queue))
 
 
 @login_required
@@ -285,7 +358,48 @@ def leave_queue(request, short_id):
 @require_queue_owner
 def queue_dashboard(request, short_id):
     queue = get_object_or_404(Queue, short_id=short_id)
-    waiting_customers = queue.customers.filter(called_at__isnull=True)
+    waiting_customers = queue.customers.filter(called_at__isnull=True).order_by("created_at")
+    called_customer = queue.customers.filter(called_at__isnull=False).first()
+    waiting_count = waiting_customers.count()
+    called_count = 1 if called_customer else 0
+    total_live_count = waiting_count + called_count
+    now = timezone.now()
+
+    oldest_waiting_customer = waiting_customers.first()
+    oldest_wait_duration = (
+        now - oldest_waiting_customer.created_at if oldest_waiting_customer else None
+    )
+    estimated_clear_time = (
+        queue.average_wait_time * waiting_count if queue.served_count > 0 else None
+    )
+    queue_age = now - (queue.created_at or now)
+    queue_age_hours = max(queue_age.total_seconds() / 3600, 0.0)
+    service_pace_per_hour = (
+        queue.served_count / queue_age_hours if queue_age_hours > 0 else 0.0
+    )
+    flow_waiting_pct = int(round((waiting_count / total_live_count) * 100)) if total_live_count else 0
+    flow_called_pct = 100 - flow_waiting_pct if total_live_count else 0
+
+    fresh_waiting = 0
+    medium_waiting = 0
+    long_waiting = 0
+    for customer in waiting_customers:
+        wait_seconds = (now - customer.created_at).total_seconds()
+        if wait_seconds <= 5 * 60:
+            fresh_waiting += 1
+        elif wait_seconds <= 15 * 60:
+            medium_waiting += 1
+        else:
+            long_waiting += 1
+
+    if waiting_count:
+        fresh_pct = int(round((fresh_waiting / waiting_count) * 100))
+        medium_pct = int(round((medium_waiting / waiting_count) * 100))
+        long_pct = max(100 - fresh_pct - medium_pct, 0)
+    else:
+        fresh_pct = 0
+        medium_pct = 0
+        long_pct = 0
 
     for index, customer in enumerate(waiting_customers, start=1):
         customer.calculated_position = index
@@ -296,7 +410,21 @@ def queue_dashboard(request, short_id):
         {
             "queue": queue,
             "waiting_customers": waiting_customers,
-            "called_customer": queue.customers.filter(called_at__isnull=False).first(),
+            "called_customer": called_customer,
+            "waiting_count": waiting_count,
+            "called_count": called_count,
+            "oldest_wait_duration": oldest_wait_duration,
+            "estimated_clear_time": estimated_clear_time,
+            "service_pace_per_hour": service_pace_per_hour,
+            "queue_uptime": queue_age if queue_age > timedelta(0) else timedelta(0),
+            "flow_waiting_pct": flow_waiting_pct,
+            "flow_called_pct": flow_called_pct,
+            "fresh_waiting_count": fresh_waiting,
+            "medium_waiting_count": medium_waiting,
+            "long_waiting_count": long_waiting,
+            "fresh_waiting_pct": fresh_pct,
+            "medium_waiting_pct": medium_pct,
+            "long_waiting_pct": long_pct,
         },
     )
 
@@ -380,15 +508,22 @@ def register_public_key(request, short_id):
         return HttpResponseBadRequest(_("Missing or invalid public_key."))
 
     public_key = public_key.strip()
+    if len(public_key) > MAX_PUBLIC_KEY_LENGTH:
+        return HttpResponseBadRequest(_("Public key is too large."))
+
     if request.user == queue.owner:
-        queue.public_key = public_key
-        queue.save(update_fields=["public_key"])
+        if queue.public_key != public_key:
+            queue.public_key = public_key
+            queue.public_key_version += 1
+            queue.save(update_fields=["public_key", "public_key_version"])
+        return JsonResponse({"status": "ok", "version": queue.public_key_version})
     else:
         customer = get_object_or_404(Customer, user=request.user, queue=queue)
-        customer.public_key = public_key
-        customer.save(update_fields=["public_key"])
-
-    return JsonResponse({"status": "ok"})
+        if customer.public_key != public_key:
+            customer.public_key = public_key
+            customer.public_key_version += 1
+            customer.save(update_fields=["public_key", "public_key_version"])
+        return JsonResponse({"status": "ok", "version": customer.public_key_version})
 
 
 @login_required
@@ -397,19 +532,31 @@ def submit_info(request, short_id):
     queue = get_object_or_404(Queue, short_id=short_id)
     customer = get_object_or_404(Customer, user=request.user, queue=queue)
 
-    payload, error_response = _get_json_payload(request)
-    if error_response:
-        return error_response
+    if (request.content_type or "").startswith("application/json"):
+        payload, error_response = _get_json_payload(request)
+        if error_response:
+            return error_response
+    else:
+        payload = request.POST
 
-    if not isinstance(payload, dict):
+    if not isinstance(payload, Mapping):
         return HttpResponseBadRequest(_("Payload must be a JSON object."))
 
     to_owner = payload.get("to_owner")
     to_customer = payload.get("to_customer")
+    owner_key_version = _parse_int_field(payload.get("owner_key_version"))
+    customer_key_version = _parse_int_field(payload.get("customer_key_version"))
+    nonce = payload.get("nonce")
     if not isinstance(to_owner, str) or not isinstance(to_customer, str):
         return HttpResponseBadRequest(
             _("Payload must contain string fields 'to_owner' and 'to_customer'.")
         )
+    if not isinstance(owner_key_version, int) or owner_key_version < 1:
+        return HttpResponseBadRequest(_("owner_key_version must be a positive integer."))
+    if not isinstance(customer_key_version, int) or customer_key_version < 1:
+        return HttpResponseBadRequest(_("customer_key_version must be a positive integer."))
+    if not isinstance(nonce, str) or not NONCE_PATTERN.match(nonce):
+        return HttpResponseBadRequest(_("Invalid nonce format."))
     if not queue.public_key:
         return HttpResponseBadRequest(
             _("Queue owner public key is missing. Register owner key first.")
@@ -422,14 +569,42 @@ def submit_info(request, short_id):
         return HttpResponseBadRequest(
             _("Encrypted fields cannot be empty.")
         )
+    if len(to_owner) > MAX_CIPHERTEXT_LENGTH or len(to_customer) > MAX_CIPHERTEXT_LENGTH:
+        return HttpResponseBadRequest(_("Encrypted payload is too large."))
+    if queue.public_key_version != owner_key_version:
+        return HttpResponseBadRequest(_("Owner key version mismatch. Refresh and retry."))
+    if customer.public_key_version != customer_key_version:
+        return HttpResponseBadRequest(_("Customer key version mismatch. Refresh and retry."))
+
+    try:
+        with transaction.atomic():
+            CustomerNoteNonce.objects.create(customer=customer, nonce=nonce)
+    except IntegrityError:
+        return HttpResponseBadRequest(_("Replay detected: nonce already used."))
+
+    stale_ids = (
+        CustomerNoteNonce.objects.filter(customer=customer)
+        .order_by("-created_at")
+        .values_list("id", flat=True)[100:]
+    )
+    if stale_ids:
+        CustomerNoteNonce.objects.filter(id__in=list(stale_ids)).delete()
 
     customer.info = json.dumps(
         {
             "to_owner": to_owner,
             "to_customer": to_customer,
+            "owner_key_version": owner_key_version,
+            "customer_key_version": customer_key_version,
+            "nonce": nonce,
         }
     )
     customer.save(update_fields=["info"])
+
+    if _is_htmx_request(request):
+        response = HttpResponse(status=204)
+        response["HX-Trigger"] = "secure-note-updated"
+        return response
 
     return JsonResponse({"status": "ok"})
 
@@ -440,4 +615,8 @@ def clear_info(request, short_id):
     customer = get_object_or_404(Customer, user=request.user, queue__short_id=short_id)
     customer.info = None
     customer.save(update_fields=["info"])
+    if _is_htmx_request(request):
+        response = HttpResponse(status=204)
+        response["HX-Trigger"] = "secure-note-updated"
+        return response
     return JsonResponse({"status": "ok"})

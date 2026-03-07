@@ -1,5 +1,5 @@
 {% extends 'queueapp/base.html' %}
-{% load i18n time_filters tz %}
+{% load i18n %}
 {% block title %}{% trans "Queue" %} {{ queue.short_id }}{% endblock %}
 
 {% block content %}
@@ -11,185 +11,134 @@
     </p>
 </section>
 
-<section class="panel" id="queue-status-panel">
-    {% if user.active_customer %}
-        {% if user.active_customer.called_at %}
-            <h2 class="text-center">{% trans "It is your turn." %}</h2>
-            <p class="text-center text-muted">{% trans "Show this unique code to staff:" %}</p>
-            <p class="text-center"><code class="code-badge">{{ user.active_customer.secret_id }}</code></p>
-            <div class="info-list text-center text-small text-muted">
-                <p>{% trans "Time since called" %}: {{ user.active_customer.called_at|timesince_display }}</p>
-                <p>{% trans "Total waiting time" %}: {{ user.active_customer.wait_time|timesince_display }}</p>
-            </div>
-        {% else %}
-            <p class="kicker text-center">{% trans "Current position" %}</p>
-            <p class="queue-number">{{ user.active_customer.position }}</p>
-            <p class="text-center text-muted">
-                {% if user.active_customer.position == 1 %}
-                    {% trans "Please prepare, you are next." %}
-                {% else %}
-                    {% trans "Keep this page open to track updates." %}
-                {% endif %}
-            </p>
-
-            <form method="post" action="{% url 'queueapp:leave_queue' queue.short_id %}" class="text-center" style="margin-top:1rem;">
-                {% csrf_token %}
-                <button type="submit" class="btn danger">{% trans "Leave queue" %}</button>
-            </form>
-
-            {% timezone "Europe/Bratislava" %}
-                <p class="text-center text-small text-muted" style="margin-top:1rem;">
-                    {% trans "Joined at" %}: {{ user.active_customer.created_at|date:"H:i - d.m.Y" }}
-                </p>
-            {% endtimezone %}
-        {% endif %}
-    {% else %}
-        <h2>{% trans "Join this queue" %}</h2>
-        <p class="text-muted">{% trans "After joining, you will receive a live position and identification code." %}</p>
-        {% if waiting_customers %}
-            <p class="text-small text-muted">
-                {% blocktrans with count=waiting_customers %}People currently waiting: {{ count }}{% endblocktrans %}
-            </p>
-        {% endif %}
-
-        <form method="post" class="form-stack" style="margin-top:1rem;">
-            {% csrf_token %}
-            <button type="submit" class="btn primary">{% trans "Join queue" %}</button>
-        </form>
-    {% endif %}
-</section>
-
-{% if user.active_customer and not user.active_customer.called_at %}
-<section class="panel" id="secure-note-panel">
-    <h3>{% trans "Encrypted note" %}</h3>
-    <p class="text-muted text-small">
-        {% trans "Optional note is encrypted end-to-end. It is readable only by you and the queue owner." %}
-    </p>
-
-    <div class="actions-row" style="margin-top:.7rem;">
-        <button id="enter-info-btn" class="btn secondary" type="button">{% trans "Edit note" %}</button>
-    </div>
-
-    <div id="info-form" style="display:none;margin-top:.8rem;" class="form-stack">
-        <label for="info-input">{% trans "Note" %}</label>
-        <textarea
-            id="info-input"
-            maxlength="64"
-            rows="3"
-            data-info='{{ user.active_customer.info|default_if_none:""|escapejs }}'
-            class="input"
-            placeholder="{% trans 'Type note...' %}"></textarea>
-        <button id="info-submit-btn" class="btn primary" type="button">{% trans "Save note" %}</button>
-    </div>
-</section>
-{% endif %}
+{% include "queueapp/partials/join_live_shell.html" %}
 
 <script>
 window.addEventListener("DOMContentLoaded", function () {
-  if (!window.retrievePrivateKey || !window.generateRSAKeyPair) {
-    console.error("crypto.js is not loaded; encrypted note features are unavailable.");
+  if (!window.retrievePrivateKey || !window.generateRSAKeyPair || !window.htmx) {
+    console.error("crypto.js or htmx is not loaded; live encrypted note features are unavailable.");
     return;
-  }
-
-  function getCsrfToken() {
-    const match = document.cookie.match(/(?:^|;\s*)csrftoken=([^;]+)/);
-    if (match) {
-      return decodeURIComponent(match[1]);
-    }
-    return "{{ csrf_token }}";
   }
 
   function parseInfoPayload(raw) {
     if (!raw) return null;
-
     try {
       return JSON.parse(raw);
     } catch (error) {
       try {
-        const decoded = raw.replace(/\\u([0-9a-fA-F]{4})/g, function (_m, hex) {
+        const decoded = raw.replace(/\\u([0-9a-fA-F]{4})/g, function (_match, hex) {
           return String.fromCharCode(parseInt(hex, 16));
         });
         return JSON.parse(decoded);
-      } catch (_secondError) {
+      } catch (_error) {
         return null;
       }
     }
   }
 
-  const panel = document.getElementById("queue-status-panel");
-  if (!panel) {
-    return;
+  function looksLikeEncryptedPayload(raw) {
+    if (!raw) return false;
+    const text = raw.trim();
+    return text.startsWith("{") && (text.includes("to_owner") || text.includes("\\u0074\\u006f\\u005f\\u006f\\u0077\\u006e\\u0065\\u0072"));
   }
 
-  setInterval(function () {
-    const active = document.activeElement;
-    const focusedInput = active && (
-      active.tagName === "INPUT" ||
-      active.tagName === "TEXTAREA" ||
-      active.tagName === "SELECT" ||
-      active.isContentEditable
-    );
-    if (!focusedInput) {
-      window.location.reload();
+  function decodeLegacyEscapedText(raw) {
+    if (!raw) return "";
+    try {
+      return raw.replace(/\\u([0-9a-fA-F]{4})/g, function (_match, hex) {
+        return String.fromCharCode(parseInt(hex, 16));
+      });
+    } catch (_error) {
+      return raw;
     }
-  }, 15000);
-
-  const enterBtn = document.getElementById("enter-info-btn");
-  if (!enterBtn) {
-    return;
   }
 
-  const infoForm = document.getElementById("info-form");
-  const infoInput = document.getElementById("info-input");
-  const submitBtn = document.getElementById("info-submit-btn");
-  const queueShort = "{{ queue.short_id }}";
-  const ownerPub = "{{ queue.public_key|default_if_none:''|escapejs }}";
-  const serverPub = "{{ user.active_customer.public_key|default_if_none:''|escapejs }}";
-  const csrfToken = getCsrfToken();
+  function getCsrfToken() {
+    const match = document.cookie.match(/(?:^|;\s*)csrftoken=([^;]+)/);
+    if (match) return decodeURIComponent(match[1]);
+    return "{{ csrf_token }}";
+  }
 
-  async function decryptExistingNote() {
-    if (!infoInput) return;
+  function isInteractiveFocused() {
+    const active = document.activeElement;
+    if (!active) return false;
+    return active.tagName === "INPUT" || active.tagName === "TEXTAREA" || active.tagName === "SELECT" || active.isContentEditable;
+  }
+
+  function generateNonce() {
+    const bytes = new Uint8Array(18);
+    crypto.getRandomValues(bytes);
+    return btoa(String.fromCharCode(...bytes)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  }
+
+  function initMetricsPanel() {
+    const shell = document.getElementById("live-queue-shell");
+    const collapsible = document.getElementById("metrics-collapsible");
+    if (!shell || !collapsible) return;
+
+    const stateKey = `metrics-open:${shell.dataset.queueShort}:${shell.dataset.userId}`;
+    let savedState = null;
+    try {
+      savedState = window.sessionStorage.getItem(stateKey);
+    } catch (_error) {}
+    if (savedState === "1") {
+      collapsible.open = true;
+    }
+
+    if (collapsible.dataset.bound !== "1") {
+      collapsible.dataset.bound = "1";
+      collapsible.addEventListener("toggle", function () {
+        try {
+          window.sessionStorage.setItem(stateKey, collapsible.open ? "1" : "0");
+        } catch (_error) {}
+      });
+    }
+  }
+
+  async function decryptExistingNote(infoInput, keyStoreId) {
     const encoded = infoInput.dataset.info;
     if (!encoded) return;
 
     const payload = parseInfoPayload(encoded);
-    if (!payload) {
-      // Backward-compatible fallback for old plaintext notes.
-      infoInput.value = encoded;
-      return;
-    }
-
-    const privateKey = await window.retrievePrivateKey();
-    if (!privateKey || !payload.to_customer) {
+    if (!payload || !payload.to_customer) {
+      if (!looksLikeEncryptedPayload(encoded)) {
+        // Backward compatibility for very old plaintext notes.
+        infoInput.value = decodeLegacyEscapedText(encoded);
+      }
       return;
     }
 
     try {
+      const privateKey = await window.retrievePrivateKey(keyStoreId);
+      if (!privateKey) return;
       const ciphertext = window.base64ToArrayBuffer(payload.to_customer);
-      const plaintext = await window.decryptWithPrivateKey(privateKey, ciphertext);
-      infoInput.value = plaintext;
-    } catch (e) {
-      console.error("Failed to decrypt note", e);
+      infoInput.value = await window.decryptWithPrivateKey(privateKey, ciphertext);
+    } catch (error) {
+      console.error("Failed to decrypt note", error);
     }
   }
 
-  async function ensureCustomerKey() {
-    let privateKey = await window.retrievePrivateKey();
-    if (privateKey && serverPub) {
-      return privateKey;
+  async function ensureCustomerKey(shell, keyStoreId) {
+    const queueShort = shell.dataset.queueShort;
+    const csrfToken = getCsrfToken();
+    const serverPub = shell.dataset.customerPub || "";
+    const serverVersion = Number(shell.dataset.customerVersion || "0");
+    let privateKey = await window.retrievePrivateKey(keyStoreId);
+
+    if (privateKey && serverPub && serverVersion > 0) {
+      return { publicKeyBase64: serverPub, version: serverVersion };
     }
 
-    if (privateKey && !serverPub) {
-      await window.deletePrivateKey();
+    if (privateKey && (!serverPub || serverVersion < 1)) {
+      await window.deletePrivateKey(keyStoreId);
       privateKey = null;
     }
 
     if (!privateKey) {
       const pair = await window.generateRSAKeyPair();
-      privateKey = pair.privateKey;
-      await window.storePrivateKey(privateKey);
-
+      await window.storePrivateKey(pair.privateKey, keyStoreId);
       const publicKey = await window.exportPublicKeyToBase64(pair.publicKey);
+
       const registerResponse = await fetch(`/q/${queueShort}/register_key/`, {
         method: "POST",
         headers: {
@@ -201,88 +150,174 @@ window.addEventListener("DOMContentLoaded", function () {
       if (!registerResponse.ok) {
         return null;
       }
+
+      let responseData = { version: 0 };
+      try {
+        responseData = await registerResponse.json();
+      } catch (_error) {}
+      return { publicKeyBase64: publicKey, version: Number(responseData.version || 0) };
     }
 
-    return privateKey;
+    return null;
   }
 
-  enterBtn.addEventListener("click", function () {
-    const hidden = getComputedStyle(infoForm).display === "none";
-    infoForm.style.display = hidden ? "grid" : "none";
-    enterBtn.textContent = hidden ? "{% trans 'Hide editor' %}" : "{% trans 'Edit note' %}";
-  });
+  async function initSecureNotePanel() {
+    const shell = document.getElementById("live-queue-shell");
+    if (!shell) return;
 
-  submitBtn.addEventListener("click", async function () {
-    const text = (infoInput.value || "").trim();
+    const enterBtn = document.getElementById("enter-info-btn");
+    const infoForm = document.getElementById("info-form");
+    const infoInput = document.getElementById("info-input");
+    const submitBtn = document.getElementById("info-submit-btn");
+    const toast = document.getElementById("secure-note-toast");
+    const submitForm = document.getElementById("secure-note-submit-form");
+    const clearForm = document.getElementById("secure-note-clear-form");
+    if (!enterBtn || !infoForm || !infoInput || !submitBtn || !submitForm || !clearForm || !toast) return;
 
-    if (!text) {
-      await fetch(`/q/${queueShort}/clear_info/`, {
-        method: "POST",
-        headers: { "X-CSRFToken": csrfToken }
+    const queueShort = shell.dataset.queueShort;
+    const ownerPub = shell.dataset.ownerPub || "";
+    const ownerVersion = Number(shell.dataset.ownerVersion || "0");
+    const userId = shell.dataset.userId;
+    const keyStoreId = `customer:${queueShort}:${userId}`;
+
+    function showToast(message, kind) {
+      toast.hidden = false;
+      toast.classList.remove("success", "error");
+      toast.classList.add(kind === "error" ? "error" : "success");
+      toast.textContent = message;
+
+      if (toast.dataset.timer) {
+        clearTimeout(Number(toast.dataset.timer));
+      }
+      const timer = window.setTimeout(function () {
+        toast.hidden = true;
+      }, 3200);
+      toast.dataset.timer = String(timer);
+    }
+
+    function closeEditor() {
+      infoForm.style.display = "none";
+      enterBtn.textContent = "{% trans 'Edit note' %}";
+    }
+
+    if (infoInput.dataset.decrypted !== "1") {
+      await decryptExistingNote(infoInput, keyStoreId);
+      infoInput.dataset.decrypted = "1";
+    }
+
+    if (enterBtn.dataset.bound !== "1") {
+      enterBtn.dataset.bound = "1";
+      enterBtn.addEventListener("click", function () {
+        const hidden = getComputedStyle(infoForm).display === "none";
+        infoForm.style.display = hidden ? "grid" : "none";
+        enterBtn.textContent = hidden ? "{% trans 'Hide editor' %}" : "{% trans 'Edit note' %}";
       });
-      window.location.reload();
-      return;
     }
 
-    if (!ownerPub) {
-      alert("{% trans 'Queue owner has not enabled encrypted notes yet.' %}");
-      return;
+    if (submitBtn.dataset.bound !== "1") {
+      submitBtn.dataset.bound = "1";
+      submitBtn.addEventListener("click", async function () {
+        const text = (infoInput.value || "").trim();
+
+        if (!text) {
+          htmx.trigger(clearForm, "submit");
+          return;
+        }
+
+        if (!ownerPub || ownerVersion < 1) {
+          alert("{% trans 'Queue owner has not enabled encrypted notes yet.' %}");
+          return;
+        }
+
+        const keyState = await ensureCustomerKey(shell, keyStoreId);
+        if (!keyState || !keyState.publicKeyBase64 || keyState.version < 1) {
+          alert("{% trans 'Unable to initialize secure key.' %}");
+          return;
+        }
+
+        try {
+          const ownerKey = await window.importPublicKeyFromBase64(ownerPub);
+          const customerKey = await window.importPublicKeyFromBase64(keyState.publicKeyBase64);
+          const encryptedForOwner = window.arrayBufferToBase64(
+            await window.encryptWithPublicKey(ownerKey, text)
+          );
+          const encryptedForCustomer = window.arrayBufferToBase64(
+            await window.encryptWithPublicKey(customerKey, text)
+          );
+
+          document.getElementById("note-to-owner").value = encryptedForOwner;
+          document.getElementById("note-to-customer").value = encryptedForCustomer;
+          document.getElementById("note-owner-version").value = String(ownerVersion);
+          document.getElementById("note-customer-version").value = String(keyState.version);
+          document.getElementById("note-nonce").value = generateNonce();
+          htmx.trigger(submitForm, "submit");
+        } catch (error) {
+          console.error("Encryption failed", error);
+          alert("{% trans 'Unable to encrypt note.' %}");
+        }
+      });
     }
 
-    const privateKey = await ensureCustomerKey();
-    if (!privateKey) {
-      alert("{% trans 'Unable to initialize secure key.' %}");
-      return;
+    if (submitForm.dataset.bound !== "1") {
+      submitForm.dataset.bound = "1";
+      submitForm.addEventListener("htmx:afterRequest", function (event) {
+        if (event.detail.successful) {
+          closeEditor();
+          showToast("{% trans 'Encrypted note saved.' %}", "success");
+        }
+      });
     }
 
-    const customerKeyPair = await window.generateRSAKeyPair();
-    await window.storePrivateKey(customerKeyPair.privateKey);
-    const customerPub64 = await window.exportPublicKeyToBase64(customerKeyPair.publicKey);
-
-    const registerResponse = await fetch(`/q/${queueShort}/register_key/`, {
-      method: "POST",
-      headers: {
-        "X-CSRFToken": csrfToken,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ public_key: customerPub64 })
-    });
-    if (!registerResponse.ok) {
-      alert("{% trans 'Unable to register customer key.' %}");
-      return;
+    if (clearForm.dataset.bound !== "1") {
+      clearForm.dataset.bound = "1";
+      clearForm.addEventListener("htmx:afterRequest", function (event) {
+        if (event.detail.successful) {
+          closeEditor();
+          showToast("{% trans 'Note cleared.' %}", "success");
+        }
+      });
     }
 
-    const ownerKey = await window.importPublicKeyFromBase64(ownerPub);
-    const customerKey = await window.importPublicKeyFromBase64(customerPub64);
-    const encryptedForOwner = window.arrayBufferToBase64(
-      await window.encryptWithPublicKey(ownerKey, text)
-    );
-    const encryptedForCustomer = window.arrayBufferToBase64(
-      await window.encryptWithPublicKey(customerKey, text)
-    );
-
-    const response = await fetch(`/q/${queueShort}/submit_info/`, {
-      method: "POST",
-      headers: {
-        "X-CSRFToken": csrfToken,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        to_owner: encryptedForOwner,
-        to_customer: encryptedForCustomer
-      })
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      alert(errorText);
-      return;
+    if (submitForm.dataset.errorBound !== "1") {
+      submitForm.dataset.errorBound = "1";
+      submitForm.addEventListener("htmx:responseError", function () {
+        showToast("{% trans 'Secure note request failed.' %}", "error");
+      });
     }
 
-    window.location.reload();
+    if (clearForm.dataset.errorBound !== "1") {
+      clearForm.dataset.errorBound = "1";
+      clearForm.addEventListener("htmx:responseError", function () {
+        showToast("{% trans 'Secure note request failed.' %}", "error");
+      });
+    }
+  }
+
+  document.body.addEventListener("htmx:beforeRequest", function (event) {
+    const elt = event.detail.elt;
+    if (elt && elt.id === "live-queue-shell" && isInteractiveFocused()) {
+      event.preventDefault();
+    }
   });
 
-  decryptExistingNote();
+  document.body.addEventListener("htmx:afterSwap", function (event) {
+    if (event.detail.target && event.detail.target.id === "live-queue-shell") {
+      initMetricsPanel();
+      initSecureNotePanel();
+    }
+  });
+
+  document.body.addEventListener("htmx:responseError", function (event) {
+    const elt = event.detail.elt;
+    if (!elt) return;
+    if (elt.id === "secure-note-submit-form" || elt.id === "secure-note-clear-form") {
+      const message = (event.detail.xhr && event.detail.xhr.responseText) || "{% trans 'Secure note request failed.' %}";
+      alert(message);
+    }
+  });
+
+  initMetricsPanel();
+  initSecureNotePanel();
 });
 </script>
 {% endblock %}

@@ -194,6 +194,10 @@ a {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+.grid.four {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
 .form-stack {
   display: grid;
   gap: 0.85rem;
@@ -322,6 +326,173 @@ a.btn {
   margin: 0.3rem 0 0;
   font-size: 1.2rem;
   font-family: "Space Grotesk", sans-serif;
+}
+
+.metric-unit {
+  font-size: 0.86rem;
+  color: var(--muted);
+  font-family: "Manrope", "Segoe UI", sans-serif;
+}
+
+.user-metrics-panel h3 {
+  margin-top: 0;
+}
+
+.queue-user-metrics .metric-card {
+  min-height: 100%;
+}
+
+.metrics-collapsible {
+  margin-top: 1rem;
+}
+
+.metrics-collapsible > summary {
+  list-style: none;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.82rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: rgba(244, 248, 253, 0.85);
+}
+
+.metrics-collapsible > summary::-webkit-details-marker {
+  display: none;
+}
+
+.metrics-summary-title {
+  font-weight: 700;
+}
+
+.metrics-collapsible[open] > summary {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.metrics-collapsible .user-metrics-panel {
+  margin-top: 0;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+  box-shadow: none;
+}
+
+.metric-span-two {
+  grid-column: 1 / -1;
+}
+
+.plot-card {
+  background: #f9fcff;
+}
+
+.stacked-plot {
+  display: flex;
+  width: 100%;
+  height: 14px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: #dce8f5;
+  border: 1px solid #c6d7ea;
+}
+
+.plot-segment {
+  height: 100%;
+}
+
+.plot-segment.waiting {
+  background: #0f6ad8;
+}
+
+.plot-segment.called {
+  background: #14b8a6;
+}
+
+.plot-segment.ahead {
+  background: #f59e0b;
+}
+
+.plot-segment.behind {
+  background: #60a5fa;
+}
+
+.plot-segment.fresh {
+  background: #16a34a;
+}
+
+.plot-segment.medium {
+  background: #f59e0b;
+}
+
+.plot-segment.long {
+  background: #ef4444;
+}
+
+.plot-legend {
+  display: flex;
+  gap: 0.7rem;
+  flex-wrap: wrap;
+  margin-top: 0.55rem;
+  color: var(--muted);
+}
+
+.plot-dot {
+  width: 0.72rem;
+  height: 0.72rem;
+  border-radius: 999px;
+  display: inline-block;
+  margin-right: 0.35rem;
+  vertical-align: middle;
+}
+
+.plot-dot.waiting {
+  background: #0f6ad8;
+}
+
+.plot-dot.called {
+  background: #14b8a6;
+}
+
+.plot-dot.ahead {
+  background: #f59e0b;
+}
+
+.plot-dot.behind {
+  background: #60a5fa;
+}
+
+.plot-dot.fresh {
+  background: #16a34a;
+}
+
+.plot-dot.medium {
+  background: #f59e0b;
+}
+
+.plot-dot.long {
+  background: #ef4444;
+}
+
+.note-toast {
+  margin-top: 0.75rem;
+  padding: 0.55rem 0.7rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.note-toast.success {
+  background: #ebfbf8;
+  border-color: #98e0d8;
+  color: #065f56;
+}
+
+.note-toast.error {
+  background: #fdebec;
+  border-color: #f2b6b6;
+  color: #7f1d1d;
 }
 
 .queue-number {
@@ -466,6 +637,28 @@ a.btn {
   padding-left: 1.2rem;
 }
 
+.account-footnote {
+  background: var(--panel-soft);
+  border-style: dashed;
+  border-color: #c8d8e9;
+  box-shadow: none;
+}
+
+.account-footnote .kicker {
+  font-size: 0.72rem;
+  margin-bottom: 0.25rem;
+  color: #6f829a;
+}
+
+.account-footnote-link {
+  color: #5e6f85;
+  text-underline-offset: 2px;
+}
+
+.account-footnote-link:hover {
+  color: #3b4a5f;
+}
+
 .reveal {
   animation: rise 0.35s ease both;
 }
@@ -483,11 +676,26 @@ a.btn {
 
 @media (max-width: 860px) {
   .grid.two,
-  .grid.three {
+  .grid.three,
+  .grid.four {
     grid-template-columns: 1fr;
+  }
+
+  .grid.two.queue-user-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .header-inner {
     align-items: flex-start;
+  }
+
+  .metrics-collapsible > summary {
+    padding: 0.74rem 0.82rem;
+  }
+}
+
+@media (max-width: 560px) {
+  .grid.two.queue-user-metrics {
+    grid-template-columns: 1fr;
   }
 }

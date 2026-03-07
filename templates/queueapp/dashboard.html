@@ -18,6 +18,14 @@
             <p class="metric-value"><a href="{% url 'queueapp:qr_queue' queue.short_id %}">{{ queue.short_id }}</a></p>
         </article>
         <article class="metric-card">
+            <p class="metric-label">{% trans "Waiting customers" %}</p>
+            <p class="metric-value">{{ waiting_count }}</p>
+        </article>
+        <article class="metric-card">
+            <p class="metric-label">{% trans "Currently called" %}</p>
+            <p class="metric-value">{{ called_count }}</p>
+        </article>
+        <article class="metric-card">
             <p class="metric-label">{% trans "Average wait" %}</p>
             <p class="metric-value">{{ queue.average_wait_time|timesince_display }}</p>
         </article>
@@ -52,6 +60,79 @@
         {% endif %}
     </div>
     <p id="copy-link-msg" class="text-small text-muted" style="margin-top:.6rem;"></p>
+</section>
+
+<section class="panel">
+    <h2>{% trans "Live dashboard" %}</h2>
+    <div class="grid three">
+        <article class="metric-card">
+            <p class="metric-label">{% trans "Longest current wait" %}</p>
+            <p class="metric-value">
+                {% if oldest_wait_duration %}
+                    {{ oldest_wait_duration|timesince_display }}
+                {% else %}
+                    0s
+                {% endif %}
+            </p>
+        </article>
+        <article class="metric-card">
+            <p class="metric-label">{% trans "Estimated time to clear queue" %}</p>
+            <p class="metric-value">
+                {% if estimated_clear_time %}
+                    {{ estimated_clear_time|timesince_display }}
+                {% else %}
+                    {% trans "No baseline yet" %}
+                {% endif %}
+            </p>
+        </article>
+        <article class="metric-card">
+            <p class="metric-label">{% trans "Service pace" %}</p>
+            <p class="metric-value">
+                {{ service_pace_per_hour|floatformat:1 }}
+                <span class="metric-unit">{% trans "customers/hour" %}</span>
+            </p>
+            <p class="text-small text-muted">{% trans "Queue uptime" %}: {{ queue_uptime|timesince_display }}</p>
+        </article>
+    </div>
+</section>
+
+<section class="panel">
+    <h2>{% trans "Queue plots" %}</h2>
+    <div class="grid two owner-plot-grid">
+        <article class="metric-card plot-card">
+            <p class="metric-label">{% trans "Flow distribution" %}</p>
+            <div
+                class="stacked-plot"
+                role="img"
+                aria-label="{% blocktrans with waiting=flow_waiting_pct called=flow_called_pct %}Queue flow. Waiting {{ waiting }} percent, called {{ called }} percent.{% endblocktrans %}"
+            >
+                <span class="plot-segment waiting" style="width:{{ flow_waiting_pct }}%"></span>
+                <span class="plot-segment called" style="width:{{ flow_called_pct }}%"></span>
+            </div>
+            <div class="plot-legend text-small">
+                <span><i class="plot-dot waiting"></i>{% trans "Waiting customers" %}: {{ waiting_count }}</span>
+                <span><i class="plot-dot called"></i>{% trans "Currently called" %}: {{ called_count }}</span>
+            </div>
+        </article>
+
+        <article class="metric-card plot-card">
+            <p class="metric-label">{% trans "Wait age distribution" %}</p>
+            <div
+                class="stacked-plot"
+                role="img"
+                aria-label="{% blocktrans with fresh=fresh_waiting_pct medium=medium_waiting_pct long=long_waiting_pct %}Waiting age. Fresh {{ fresh }} percent, medium {{ medium }} percent, long {{ long }} percent.{% endblocktrans %}"
+            >
+                <span class="plot-segment fresh" style="width:{{ fresh_waiting_pct }}%"></span>
+                <span class="plot-segment medium" style="width:{{ medium_waiting_pct }}%"></span>
+                <span class="plot-segment long" style="width:{{ long_waiting_pct }}%"></span>
+            </div>
+            <div class="plot-legend text-small">
+                <span><i class="plot-dot fresh"></i>{% trans "Fresh (0-5m)" %}: {{ fresh_waiting_count }}</span>
+                <span><i class="plot-dot medium"></i>{% trans "Medium (5-15m)" %}: {{ medium_waiting_count }}</span>
+                <span><i class="plot-dot long"></i>{% trans "Long (15m+)" %}: {{ long_waiting_count }}</span>
+            </div>
+        </article>
+    </div>
 </section>
 
 {% if called_customer and called_customer.called_at %}
@@ -127,6 +208,11 @@ window.addEventListener("DOMContentLoaded", function () {
 
   const copyButton = document.getElementById("copy-link-btn");
   const copyMessage = document.getElementById("copy-link-msg");
+  const queueShort = "{{ queue.short_id }}";
+  const csrfToken = getCsrfToken();
+  const serverPub = "{{ queue.public_key|default_if_none:''|escapejs }}";
+  const serverKeyVersion = Number("{{ queue.public_key_version|default:0 }}") || 0;
+  const ownerKeyStoreId = `owner:${queueShort}:{{ user.id }}`;
 
   if (copyButton) {
     copyButton.addEventListener("click", async function () {
@@ -145,7 +231,7 @@ window.addEventListener("DOMContentLoaded", function () {
   }, 15000);
 
   async function decryptAllNotes() {
-    const privateKey = await window.retrievePrivateKey();
+    const privateKey = await window.retrievePrivateKey(ownerKeyStoreId);
     if (!privateKey) {
       return;
     }
@@ -174,16 +260,19 @@ window.addEventListener("DOMContentLoaded", function () {
   }
 
   async function ensureOwnerKey() {
-    const queueShort = "{{ queue.short_id }}";
-    const csrfToken = getCsrfToken();
-    const serverPub = "{{ queue.public_key|default_if_none:''|escapejs }}";
+    let privateKey = await window.retrievePrivateKey(ownerKeyStoreId);
 
-    if (serverPub) {
+    if (privateKey && serverPub && serverKeyVersion > 0) {
       return;
     }
 
+    if (privateKey && (!serverPub || serverKeyVersion < 1)) {
+      await window.deletePrivateKey(ownerKeyStoreId);
+      privateKey = null;
+    }
+
     const pair = await window.generateRSAKeyPair();
-    await window.storePrivateKey(pair.privateKey);
+    await window.storePrivateKey(pair.privateKey, ownerKeyStoreId);
     const publicKey = await window.exportPublicKeyToBase64(pair.publicKey);
 
     const registerResponse = await fetch(`/q/${queueShort}/register_key/`, {
@@ -196,6 +285,7 @@ window.addEventListener("DOMContentLoaded", function () {
     });
     if (!registerResponse.ok) {
       console.error("Owner key registration failed", await registerResponse.text());
+      await window.deletePrivateKey(ownerKeyStoreId);
     }
   }
 

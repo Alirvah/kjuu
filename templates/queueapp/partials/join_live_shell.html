@@ -1,0 +1,210 @@
+{% load i18n time_filters tz %}
+<div
+    id="live-queue-shell"
+    hx-get="{% url 'queueapp:join_queue_live_state' queue.short_id %}"
+    hx-trigger="every 15s, secure-note-updated from:body"
+    hx-swap="outerHTML"
+    data-queue-short="{{ queue.short_id }}"
+    data-owner-pub="{{ queue.public_key|default_if_none:''|escape }}"
+    data-owner-version="{{ queue.public_key_version|default:0 }}"
+    data-customer-pub="{% if user.active_customer %}{{ user.active_customer.public_key|default_if_none:''|escape }}{% endif %}"
+    data-customer-version="{% if user.active_customer %}{{ user.active_customer.public_key_version|default:0 }}{% else %}0{% endif %}"
+    data-user-id="{{ user.id }}"
+>
+    <section class="panel" id="queue-status-panel">
+        {% if user.active_customer %}
+            {% if user.active_customer.called_at %}
+                <h2 class="text-center">{% trans "It is your turn." %}</h2>
+                <p class="text-center text-muted">{% trans "Show this unique code to staff:" %}</p>
+                <p class="text-center"><code class="code-badge">{{ user.active_customer.secret_id }}</code></p>
+                <div class="info-list text-center text-small text-muted">
+                    <p>{% trans "Time since called" %}: {{ user.active_customer.called_at|timesince_display }}</p>
+                    <p>{% trans "Total waiting time" %}: {{ user.active_customer.wait_time|timesince_display }}</p>
+                </div>
+            {% else %}
+                <p class="kicker text-center">{% trans "Current position" %}</p>
+                <p class="queue-number">{{ user.active_customer.position }}</p>
+                <p class="text-center text-muted">
+                    {% if user.active_customer.position == 1 %}
+                        {% trans "Please prepare, you are next." %}
+                    {% else %}
+                        {% trans "Keep this page open to track updates." %}
+                    {% endif %}
+                </p>
+
+                <form method="post" action="{% url 'queueapp:leave_queue' queue.short_id %}" class="text-center" style="margin-top:1rem;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn danger">{% trans "Leave queue" %}</button>
+                </form>
+
+                {% timezone "Europe/Bratislava" %}
+                    <p class="text-center text-small text-muted" style="margin-top:1rem;">
+                        {% trans "Joined at" %}: {{ user.active_customer.created_at|date:"H:i - d.m.Y" }}
+                    </p>
+                {% endtimezone %}
+            {% endif %}
+        {% else %}
+            <h2>{% trans "Join this queue" %}</h2>
+            <p class="text-muted">{% trans "After joining, you will receive a live position and identification code." %}</p>
+            {% if waiting_customers %}
+                <p class="text-small text-muted">
+                    {% blocktrans with count=waiting_customers %}People currently waiting: {{ count }}{% endblocktrans %}
+                </p>
+            {% endif %}
+
+            <form method="post" class="form-stack" style="margin-top:1rem;">
+                {% csrf_token %}
+                <button type="submit" class="btn primary">{% trans "Join queue" %}</button>
+            </form>
+        {% endif %}
+    </section>
+
+    <details id="metrics-collapsible" class="metrics-collapsible">
+        <summary>
+            <span class="metrics-summary-title">{% trans "Queue insights" %}</span>
+            <span class="text-small text-muted">{% trans "Tap to expand" %}</span>
+        </summary>
+        <section class="panel user-metrics-panel">
+            <h3>{% trans "Your metrics" %}</h3>
+            <div class="grid two queue-user-metrics">
+                {% if user.active_customer %}
+                    {% if user.active_customer.called_at %}
+                        <article class="metric-card">
+                            <p class="metric-label">{% trans "Total waiting time" %}</p>
+                            <p class="metric-value">{{ user.active_customer.wait_time|timesince_display }}</p>
+                        </article>
+                        <article class="metric-card">
+                            <p class="metric-label">{% trans "Time since called" %}</p>
+                            <p class="metric-value">{{ user.active_customer.called_at|timesince_display }}</p>
+                        </article>
+                    {% else %}
+                        <article class="metric-card">
+                            <p class="metric-label">{% trans "People ahead of you" %}</p>
+                            <p class="metric-value">{{ people_ahead|default:0 }}</p>
+                        </article>
+                        <article class="metric-card">
+                            <p class="metric-label">{% trans "Estimated remaining wait" %}</p>
+                            <p class="metric-value">
+                                {% if estimated_wait %}
+                                    {{ estimated_wait|timesince_display }}
+                                {% else %}
+                                    {% trans "No wait history yet" %}
+                                {% endif %}
+                            </p>
+                        </article>
+                    {% endif %}
+                {% else %}
+                    <article class="metric-card">
+                        <p class="metric-label">{% trans "Customers currently waiting" %}</p>
+                        <p class="metric-value">{{ queue_waiting_count }}</p>
+                    </article>
+                    <article class="metric-card">
+                        <p class="metric-label">{% trans "Historical average wait" %}</p>
+                        <p class="metric-value">
+                            {% if queue_average_wait %}
+                                {{ queue_average_wait|timesince_display }}
+                            {% else %}
+                                {% trans "No wait history yet" %}
+                            {% endif %}
+                        </p>
+                    </article>
+                {% endif %}
+
+                <article class="metric-card">
+                    <p class="metric-label">{% trans "Live queue load" %}</p>
+                    <p class="metric-value">{{ queue_total_live_count }}</p>
+                    <p class="text-small text-muted">
+                        {% blocktrans with waiting=queue_waiting_count called=queue_called_count %}Waiting: {{ waiting }}, called: {{ called }}{% endblocktrans %}
+                    </p>
+                </article>
+                <article class="metric-card">
+                    <p class="metric-label">{% trans "Queue status" %}</p>
+                    <p class="metric-value">
+                        {% if queue_is_active %}
+                            {% trans "Open" %}
+                        {% else %}
+                            {% trans "Paused" %}
+                        {% endif %}
+                    </p>
+                </article>
+
+                <article class="metric-card metric-span-two plot-card">
+                    <p class="metric-label">{% trans "Queue composition plot" %}</p>
+                    <div
+                        class="stacked-plot"
+                        role="img"
+                        aria-label="{% blocktrans with waiting=queue_waiting_pct called=queue_called_pct %}Queue distribution. Waiting {{ waiting }} percent, called {{ called }} percent.{% endblocktrans %}"
+                    >
+                        <span class="plot-segment waiting" style="width:{{ queue_waiting_pct }}%"></span>
+                        <span class="plot-segment called" style="width:{{ queue_called_pct }}%"></span>
+                    </div>
+                    <div class="plot-legend text-small">
+                        <span><i class="plot-dot waiting"></i>{% trans "Waiting" %}: {{ queue_waiting_count }}</span>
+                        <span><i class="plot-dot called"></i>{% trans "Called" %}: {{ queue_called_count }}</span>
+                    </div>
+                </article>
+
+                {% if user.active_customer and not user.active_customer.called_at %}
+                <article class="metric-card metric-span-two plot-card">
+                    <p class="metric-label">{% trans "Your position plot" %}</p>
+                    <div class="stacked-plot" role="img">
+                        <span class="plot-segment ahead" style="width:{{ people_ahead_pct|default:0 }}%"></span>
+                        <span class="plot-segment behind" style="width:{{ people_behind_pct|default:100 }}%"></span>
+                    </div>
+                    <div class="plot-legend text-small">
+                        <span><i class="plot-dot ahead"></i>{% trans "Ahead" %}: {{ people_ahead|default:0 }}</span>
+                        <span><i class="plot-dot behind"></i>{% trans "Behind" %}: {{ people_behind|default:0 }}</span>
+                    </div>
+                </article>
+                {% endif %}
+            </div>
+        </section>
+    </details>
+
+    {% if user.active_customer and not user.active_customer.called_at %}
+    <section class="panel" id="secure-note-panel">
+        <h3>{% trans "Encrypted note" %}</h3>
+        <p class="text-muted text-small">
+            {% trans "Optional note is encrypted end-to-end. It is readable only by you and the queue owner." %}
+        </p>
+
+        <div class="actions-row" style="margin-top:.7rem;">
+            <button id="enter-info-btn" class="btn secondary" type="button">{% trans "Edit note" %}</button>
+        </div>
+
+        <div id="info-form" style="display:none;margin-top:.8rem;" class="form-stack">
+            <label for="info-input">{% trans "Note" %}</label>
+            <textarea
+                id="info-input"
+                maxlength="64"
+                rows="3"
+                data-info='{{ user.active_customer.info|default_if_none:""|escape }}'
+                class="input"
+                placeholder="{% trans 'Type note...' %}"></textarea>
+            <button id="info-submit-btn" class="btn primary" type="button">{% trans "Save note" %}</button>
+        </div>
+        <p id="secure-note-toast" class="note-toast" hidden aria-live="polite"></p>
+
+        <form
+            id="secure-note-submit-form"
+            hx-post="{% url 'queueapp:submit_info' queue.short_id %}"
+            hx-swap="none"
+        >
+            {% csrf_token %}
+            <input type="hidden" id="note-to-owner" name="to_owner">
+            <input type="hidden" id="note-to-customer" name="to_customer">
+            <input type="hidden" id="note-owner-version" name="owner_key_version">
+            <input type="hidden" id="note-customer-version" name="customer_key_version">
+            <input type="hidden" id="note-nonce" name="nonce">
+        </form>
+
+        <form
+            id="secure-note-clear-form"
+            hx-post="{% url 'queueapp:clear_info' queue.short_id %}"
+            hx-swap="none"
+        >
+            {% csrf_token %}
+        </form>
+    </section>
+    {% endif %}
+</div>

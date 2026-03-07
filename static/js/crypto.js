@@ -31,6 +31,10 @@ function getKeyDB() {
   });
 }
 
+function keySlot(keyId) {
+  return (keyId || "privateKey").toString();
+}
+
 // --- RSA Key Generation ---
 async function generateRSAKeyPair() {
   return crypto.subtle.generateKey(
@@ -45,12 +49,12 @@ async function generateRSAKeyPair() {
   );
 }
 
-async function deletePrivateKey() {
+async function deletePrivateKey(keyId) {
   const db = await getKeyDB();
   const tx = db.transaction("keys", "readwrite");
   const store = tx.objectStore("keys");
   return new Promise((resolve, reject) => {
-    const request = store.delete("privateKey");
+    const request = store.delete(keySlot(keyId));
     request.onsuccess = () => resolve(true);
     request.onerror   = () => reject(request.error);
   });
@@ -89,7 +93,7 @@ async function exportPrivateKey(privateKey) {
 }
 
 // --- Store / Retrieve Private Key from IndexedDB ---
-async function storePrivateKey(privateKey) {
+async function storePrivateKey(privateKey, keyId) {
   const keyData = await exportPrivateKey(privateKey);
 
   const db = await getKeyDB();
@@ -97,19 +101,19 @@ async function storePrivateKey(privateKey) {
   const store = tx.objectStore("keys");
 
   return new Promise((resolve, reject) => {
-    const request = store.put(keyData, "privateKey");
+    const request = store.put(keyData, keySlot(keyId));
     request.onsuccess = () => resolve(true);
     request.onerror = () => reject(request.error);
   });
 }
 
-async function retrievePrivateKey() {
+async function retrievePrivateKey(keyId) {
   const db = await getKeyDB();
   const tx = db.transaction("keys", "readonly");
   const store = tx.objectStore("keys");
 
   return new Promise((resolve, reject) => {
-    const request = store.get("privateKey");
+    const request = store.get(keySlot(keyId));
     request.onsuccess = async () => {
       const keyData = request.result;
       if (!keyData) return resolve(null);
@@ -138,4 +142,3 @@ async function retrievePrivateKey() {
 //const encrypted = await encryptWithPublicKey(publicKey, message);
 //const retrievedPrivateKey = await retrievePrivateKey();
 //const decrypted = await decryptWithPrivateKey(retrievedPrivateKey, encrypted);
-

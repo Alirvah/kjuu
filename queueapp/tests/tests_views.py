@@ -1,9 +1,12 @@
 import json
+import io
+from datetime import timedelta
 
 import pytest
 from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
 from django.urls import reverse
+from django.utils import timezone
 
 from queueapp.models import Customer, Queue
 
@@ -84,6 +87,35 @@ def test_create_queue_requires_login_and_generates_pdf(client, customer_user, mo
 
 
 @pytest.mark.django_db
+def test_create_queue_pdf_language_follows_request_language(client, customer_user, customer_user_2, monkeypatch):
+    calls = []
+
+    def fake_generate(url, **kwargs):
+        calls.append((url, kwargs))
+        return io.BytesIO(b"%PDF-1.4\n% language test\n")
+
+    monkeypatch.setattr("queueapp.views.generate_kjuu_pdf", fake_generate)
+    create_url = reverse("queueapp:create_queue")
+
+    client.login(username="alice", password="pass12345")
+    response_en = client.post(create_url, {"name": "English Queue"}, HTTP_ACCEPT_LANGUAGE="en")
+    assert response_en.status_code == 302
+    assert calls[-1][1]["title"].startswith("Virtual queue")
+    assert calls[-1][1]["description"].startswith("Scan this QR code")
+    queue_en = Queue.objects.get(owner=customer_user)
+    assert queue_en.qr_language == "en"
+
+    client.logout()
+    client.login(username="bob", password="pass12345")
+    response_sk = client.post(create_url, {"name": "Slovak Queue"}, HTTP_ACCEPT_LANGUAGE="sk")
+    assert response_sk.status_code == 302
+    assert calls[-1][1]["title"].startswith("Virtuálny rad")
+    assert calls[-1][1]["description"].startswith("Naskenujte tento QR kód")
+    queue_sk = Queue.objects.get(owner=customer_user_2)
+    assert queue_sk.qr_language == "sk"
+
+
+@pytest.mark.django_db
 def test_go_to_queue_flow(client, queue, customer_user):
     go_url = reverse("queueapp:go_to_queue")
 
@@ -110,15 +142,42 @@ def test_join_queue_main_flow(client, queue, customer_user):
     assert client.get(join_url).status_code == 302
 
     client.login(username="alice", password="pass12345")
-    assert client.get(join_url).status_code == 200
+    join_get = client.get(join_url)
+    assert join_get.status_code == 200
+    assert join_get.context["queue_waiting_count"] == 0
+    assert join_get.context["queue_total_live_count"] == 0
+    assert join_get.context["queue_is_active"] is True
 
     joined = client.post(join_url)
     assert joined.status_code == 302
     assert Customer.objects.filter(user=customer_user, queue=queue).count() == 1
 
+    joined_view = client.get(join_url)
+    assert joined_view.status_code == 200
+    assert joined_view.context["queue_waiting_count"] == 1
+    assert joined_view.context["queue_total_live_count"] == 1
+    assert joined_view.context["people_ahead"] == 0
+
     joined_again = client.post(join_url)
     assert joined_again.status_code in {200, 302}
     assert Customer.objects.filter(user=customer_user, queue=queue).count() == 1
+
+
+@pytest.mark.django_db
+def test_join_queue_live_fragment(client, queue, owner, customer_user):
+    live_url = reverse("queueapp:join_queue_live_state", args=[queue.short_id])
+
+    assert client.get(live_url).status_code == 302
+
+    client.login(username="owner", password="pass12345")
+    owner_blocked = client.get(live_url)
+    assert owner_blocked.status_code == 404
+
+    client.logout()
+    client.login(username="alice", password="pass12345")
+    fragment = client.get(live_url, HTTP_HX_REQUEST="true")
+    assert fragment.status_code == 200
+    assert 'id="live-queue-shell"' in fragment.content.decode()
 
 
 @pytest.mark.django_db
@@ -178,6 +237,16 @@ def test_owner_dashboard_and_qr(client, queue, owner, customer_user):
     client.login(username="owner", password="pass12345")
     ok = client.get(dashboard_url)
     assert ok.status_code == 200
+    assert ok.context["waiting_count"] == 1
+    assert ok.context["called_count"] == 0
+    assert ok.context["oldest_wait_duration"] is not None
+    assert ok.context["estimated_clear_time"] is None
+    assert ok.context["service_pace_per_hour"] >= 0
+    assert ok.context["flow_waiting_pct"] >= 0
+    assert ok.context["flow_called_pct"] >= 0
+    assert ok.context["fresh_waiting_count"] >= 0
+    assert ok.context["medium_waiting_count"] >= 0
+    assert ok.context["long_waiting_count"] >= 0
 
     qr_url = reverse("queueapp:qr_queue", args=[queue.short_id])
     no_qr = client.get(qr_url)
@@ -187,6 +256,73 @@ def test_owner_dashboard_and_qr(client, queue, owner, customer_user):
     has_qr = client.get(qr_url)
     assert has_qr.status_code == 200
     assert has_qr["Content-Type"] == "application/pdf"
+
+
+@pytest.mark.django_db
+def test_owner_dashboard_metrics_boundaries_and_percentages(
+    client, queue, owner, customer_user, customer_user_2, monkeypatch
+):
+    third_user = User.objects.create_user(username="carol", password="pass12345")
+    fourth_user = User.objects.create_user(username="dave", password="pass12345")
+
+    fresh = Customer.objects.create(user=customer_user, queue=queue)
+    medium = Customer.objects.create(user=customer_user_2, queue=queue)
+    long_wait = Customer.objects.create(user=third_user, queue=queue)
+    called = Customer.objects.create(user=fourth_user, queue=queue)
+
+    fixed_now = timezone.now().replace(microsecond=0)
+    monkeypatch.setattr("queueapp.views.timezone.now", lambda: fixed_now)
+
+    Customer.objects.filter(pk=fresh.pk).update(created_at=fixed_now - timedelta(minutes=5))
+    Customer.objects.filter(pk=medium.pk).update(created_at=fixed_now - timedelta(minutes=15))
+    Customer.objects.filter(pk=long_wait.pk).update(created_at=fixed_now - timedelta(minutes=16))
+    Customer.objects.filter(pk=called.pk).update(
+        created_at=fixed_now - timedelta(minutes=20),
+        called_at=fixed_now - timedelta(minutes=1),
+    )
+
+    client.login(username="owner", password="pass12345")
+    response = client.get(reverse("queueapp:queue_dashboard", args=[queue.short_id]))
+    assert response.status_code == 200
+
+    context = response.context
+    assert context["waiting_count"] == 3
+    assert context["called_count"] == 1
+    assert context["flow_waiting_pct"] == 75
+    assert context["flow_called_pct"] == 25
+    assert context["flow_waiting_pct"] + context["flow_called_pct"] == 100
+
+    assert context["fresh_waiting_count"] == 1
+    assert context["medium_waiting_count"] == 1
+    assert context["long_waiting_count"] == 1
+
+    assert context["fresh_waiting_pct"] == 33
+    assert context["medium_waiting_pct"] == 33
+    assert context["long_waiting_pct"] == 34
+    assert (
+        context["fresh_waiting_pct"]
+        + context["medium_waiting_pct"]
+        + context["long_waiting_pct"]
+    ) == 100
+
+
+@pytest.mark.django_db
+def test_owner_dashboard_metrics_are_zero_when_no_live_customers(client, queue, owner):
+    client.login(username="owner", password="pass12345")
+    response = client.get(reverse("queueapp:queue_dashboard", args=[queue.short_id]))
+    assert response.status_code == 200
+    context = response.context
+
+    assert context["waiting_count"] == 0
+    assert context["called_count"] == 0
+    assert context["flow_waiting_pct"] == 0
+    assert context["flow_called_pct"] == 0
+    assert context["fresh_waiting_count"] == 0
+    assert context["medium_waiting_count"] == 0
+    assert context["long_waiting_count"] == 0
+    assert context["fresh_waiting_pct"] == 0
+    assert context["medium_waiting_pct"] == 0
+    assert context["long_waiting_pct"] == 0
 
 
 @pytest.mark.django_db
@@ -255,8 +391,10 @@ def test_crypto_and_info_endpoints(client, queue, owner, customer_user):
         content_type="application/json",
     )
     assert good_owner.status_code == 200
+    assert good_owner.json()["version"] == 1
     queue.refresh_from_db()
     assert queue.public_key == "OWNERPUB"
+    assert queue.public_key_version == 1
 
     client.logout()
     client.login(username="alice", password="pass12345")
@@ -276,6 +414,7 @@ def test_crypto_and_info_endpoints(client, queue, owner, customer_user):
         content_type="application/json",
     )
     assert customer_ok.status_code == 200
+    assert customer_ok.json()["version"] == 1
 
     assert client.get(submit_url).status_code == 405
     invalid_payload = client.post(submit_url, data="[]", content_type="application/json")
@@ -283,15 +422,36 @@ def test_crypto_and_info_endpoints(client, queue, owner, customer_user):
 
     submit_ok = client.post(
         submit_url,
-        data=json.dumps({"to_owner": "A", "to_customer": "B"}),
+        data=json.dumps(
+            {
+                "to_owner": "A",
+                "to_customer": "B",
+                "owner_key_version": 1,
+                "customer_key_version": 1,
+                "nonce": "nonce_ABCD1234abcd",
+            }
+        ),
         content_type="application/json",
     )
     assert submit_ok.status_code == 200
     assert "to_owner" in Customer.objects.get(user=customer_user, queue=queue).info
 
+    submit_form_ok = client.post(
+        submit_url,
+        data={
+            "to_owner": "A2",
+            "to_customer": "B2",
+            "owner_key_version": "1",
+            "customer_key_version": "1",
+            "nonce": "nonce_FORM123456789",
+        },
+        HTTP_HX_REQUEST="true",
+    )
+    assert submit_form_ok.status_code == 204
+
     assert client.get(clear_url).status_code == 405
-    clear_ok = client.post(clear_url)
-    assert clear_ok.status_code == 200
+    clear_ok = client.post(clear_url, HTTP_HX_REQUEST="true")
+    assert clear_ok.status_code == 204
     assert Customer.objects.get(user=customer_user, queue=queue).info is None
 
 

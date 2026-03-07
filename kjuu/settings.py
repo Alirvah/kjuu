@@ -83,6 +83,11 @@ DATABASES = {
     )
 }
 
+if DATABASES["default"]["ENGINE"] == "django.db.backends.postgresql":
+    db_test = DATABASES["default"].setdefault("TEST", {})
+    # template1 may become unusable after host libc collation upgrades.
+    db_test.setdefault("TEMPLATE", os.environ.get("DB_TEST_TEMPLATE", "template0"))
+
 
 AUTH_PASSWORD_VALIDATORS = [
     {

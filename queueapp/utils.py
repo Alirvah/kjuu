@@ -1,8 +1,9 @@
 from io import BytesIO
-from datetime import datetime
+from datetime import UTC, datetime
 
 import qrcode
 from qrcode.constants import ERROR_CORRECT_M
+from django.utils.translation import get_language
 
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
@@ -60,7 +61,48 @@ def _draw_wrapped_centered_line(c, text, font_name, font_size, y, width, max_wid
     return y
 
 
-def generate_kjuu_pdf(url, title=None, description=None, name=None, short_code=None):
+def _is_slovak_language(language_code=None):
+    lang = (language_code or get_language() or "").lower()
+    return lang.startswith("sk")
+
+
+def normalize_supported_language(language_code=None):
+    return "sk" if _is_slovak_language(language_code) else "en"
+
+
+def get_pdf_locale_strings(language_code=None):
+    if normalize_supported_language(language_code) == "sk":
+        return {
+            "default_title": "Virtuálny rad",
+            "default_description": "Naskenujte tento QR kód pre pripojenie do virtuálneho radu:",
+            "tagline": "Naskenujte. Pripojte sa. Obslúžte.",
+            "queue_code": "Kód radu",
+            "join_url": "Odkaz pre vstup",
+            "generated": "Vygenerované",
+        }
+
+    return {
+        "default_title": "Virtual queue",
+        "default_description": "Scan this QR code to join the virtual queue:",
+        "tagline": "Scan. Join. Serve.",
+        "queue_code": "Queue code",
+        "join_url": "Join URL",
+        "generated": "Generated",
+    }
+
+
+def generate_kjuu_pdf(
+    url,
+    title=None,
+    description=None,
+    name=None,
+    short_code=None,
+    tagline=None,
+    queue_code_label=None,
+    join_url_label=None,
+    generated_label=None,
+):
+    locale_strings = get_pdf_locale_strings()
     buffer = BytesIO()
     width, height = A4
     c = canvas.Canvas(buffer, pagesize=A4)
@@ -96,12 +138,12 @@ def generate_kjuu_pdf(url, title=None, description=None, name=None, short_code=N
     c.drawCentredString(margin + 14 * mm, card_top - (header_h / 2) - 3.5, "KJ")
 
     c.setFillColor(colors.white)
-    resolved_title = title or "Virtual queue"
+    resolved_title = title or locale_strings["default_title"]
     c.setFont("Helvetica-Bold", 20)
     c.drawString(margin + 29 * mm, card_top - 20 * mm, resolved_title)
     c.setFont("Helvetica", 10)
     c.setFillColor(colors.HexColor("#DCEAFF"))
-    c.drawString(margin + 29 * mm, card_top - 26.5 * mm, "Scan. Join. Serve.")
+    c.drawString(margin + 29 * mm, card_top - 26.5 * mm, tagline or locale_strings["tagline"])
 
     content_top = card_top - header_h - (8 * mm)
     c.setFillColor(dark)
@@ -110,11 +152,11 @@ def generate_kjuu_pdf(url, title=None, description=None, name=None, short_code=N
         c.drawCentredString(width / 2, content_top, name)
         content_top -= 8.5 * mm
 
-    if description:
+    if description or locale_strings["default_description"]:
         c.setFillColor(colors.HexColor("#4A617A"))
         content_top = _draw_wrapped_centered_line(
             c,
-            description,
+            description or locale_strings["default_description"],
             "Helvetica",
             11,
             content_top,
@@ -142,7 +184,7 @@ def generate_kjuu_pdf(url, title=None, description=None, name=None, short_code=N
     if short_code:
         c.setFillColor(colors.HexColor("#4A617A"))
         c.setFont("Helvetica", 11)
-        c.drawCentredString(width / 2, after_qr_y, "Queue code")
+        c.drawCentredString(width / 2, after_qr_y, queue_code_label or locale_strings["queue_code"])
 
         code_box_w = 52 * mm
         code_box_h = 15 * mm
@@ -162,13 +204,13 @@ def generate_kjuu_pdf(url, title=None, description=None, name=None, short_code=N
     c.setFillColor(colors.HexColor("#6D8097"))
     c.setFont("Helvetica", 9)
     footer_text = (
-        "Join URL: " + (url if len(url) <= 78 else (url[:75] + "..."))
+        f"{join_url_label or locale_strings['join_url']}: " + (url if len(url) <= 78 else (url[:75] + "..."))
     )
     c.drawCentredString(width / 2, footer_y, footer_text)
     c.drawCentredString(
         width / 2,
         footer_y - 11,
-        f"Generated {datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')}",
+        f"{generated_label or locale_strings['generated']} {datetime.now(UTC).strftime('%Y-%m-%d %H:%M UTC')}",
     )
 
     c.showPage()

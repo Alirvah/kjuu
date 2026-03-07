@@ -45,13 +45,13 @@
     {% endif %}
 </section>
 
-<section class="panel">
-    <h3>{% trans "Account" %}</h3>
-    <p class="text-muted">
+{% include 'queueapp/description.html' %}
+
+<section class="panel account-footnote">
+    <p class="kicker">{% trans "Account" %}</p>
+    <p class="text-muted text-small">
         {% trans "If you no longer wish to use the service, you can permanently delete your account." %}
-        <a href="{% url 'queueapp:delete_account' %}">{% trans "Delete account" %}</a>
+        <a href="{% url 'queueapp:delete_account' %}" class="account-footnote-link">{% trans "Delete account" %}</a>
     </p>
 </section>
-
-{% include 'queueapp/description.html' %}
 {% endblock %}
