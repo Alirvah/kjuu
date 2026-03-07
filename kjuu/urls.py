@@ -4,7 +4,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 urlpatterns = [
-    path(f"4b5a0355-9a7d-4df2-a629-a032ecee6a79/", admin.site.urls),
+    path(f"admin/", admin.site.urls),
     path("i18n/", include("django.conf.urls.i18n")),
     path('', include('queueapp.urls')),
 ]
