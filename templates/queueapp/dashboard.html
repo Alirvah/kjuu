@@ -4,10 +4,16 @@
 
 {% block content %}
 <section class="panel hero">
-    <p class="kicker" style="color:rgba(255,255,255,.85)">{% trans "Queue owner" %}</p>
+    <p class="kicker" style="color:rgba(255,255,255,.75)">{% trans "Queue owner" %}</p>
     <h1 class="page-title">{{ queue.name }}</h1>
-    <p class="page-subtitle" style="color:rgba(255,255,255,.93)">
-        {% blocktrans with code=queue.short_id %}Queue code: {{ code }}{% endblocktrans %}
+    <p class="page-subtitle" style="color:rgba(255,255,255,.88)">
+        {% blocktrans with code=queue.short_id %}Queue code: <strong>{{ code }}</strong>{% endblocktrans %}
+        &nbsp;
+        {% if queue.active %}
+            <span class="status-badge open" style="vertical-align:middle">{% trans "Open" %}</span>
+        {% else %}
+            <span class="status-badge paused" style="vertical-align:middle">{% trans "Paused" %}</span>
+        {% endif %}
     </p>
 </section>
 
@@ -15,10 +21,10 @@
     <div class="grid three">
         <article class="metric-card">
             <p class="metric-label">{% trans "Queue code" %}</p>
-            <p class="metric-value"><a href="{% url 'queueapp:qr_queue' queue.short_id %}">{{ queue.short_id }}</a></p>
+            <p class="metric-value"><a href="{% url 'queueapp:qr_queue' queue.short_id %}" style="color:var(--primary);text-decoration:none;font-family:'Space Grotesk',monospace;letter-spacing:.08em">{{ queue.short_id }}</a></p>
         </article>
         <article class="metric-card">
-            <p class="metric-label">{% trans "Waiting customers" %}</p>
+            <p class="metric-label">{% trans "Waiting" %}</p>
             <p class="metric-value">{{ waiting_count }}</p>
         </article>
         <article class="metric-card">
@@ -35,20 +41,32 @@
         </article>
     </div>
 
-    <div class="actions-row" style="margin-top:1rem;">
-        <button class="btn neutral" id="copy-link-btn" type="button">{% trans "Copy join link" %}</button>
+    <div class="actions-row" style="margin-top:1.25rem;">
+        <button class="btn neutral" id="copy-link-btn" type="button">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+            {% trans "Copy join link" %}
+        </button>
 
         <form method="post" action="{% url 'queueapp:call_next' queue.short_id %}">
             {% csrf_token %}
-            <button class="btn success" type="submit">{% trans "Call next customer" %}</button>
+            <button class="btn success" type="submit">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                {% trans "Call next customer" %}
+            </button>
         </form>
 
         <form method="post" action="{% url 'queueapp:pause_queue' queue.short_id %}">
             {% csrf_token %}
             {% if queue.active %}
-                <button class="btn warning" type="submit">{% trans "Pause queue" %}</button>
+                <button class="btn warning" type="submit">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+                    {% trans "Pause queue" %}
+                </button>
             {% else %}
-                <button class="btn primary" type="submit">{% trans "Resume queue" %}</button>
+                <button class="btn primary" type="submit">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                    {% trans "Resume queue" %}
+                </button>
             {% endif %}
         </form>
 
@@ -59,7 +77,7 @@
             </form>
         {% endif %}
     </div>
-    <p id="copy-link-msg" class="text-small text-muted" style="margin-top:.6rem;"></p>
+    <p id="copy-link-msg" class="text-small text-muted" style="margin-top:.6rem;min-height:1.2em"></p>
 </section>
 
 <section class="panel">
@@ -71,17 +89,17 @@
                 {% if oldest_wait_duration %}
                     {{ oldest_wait_duration|timesince_display }}
                 {% else %}
-                    0s
+                    <span class="text-muted" style="font-size:1rem">—</span>
                 {% endif %}
             </p>
         </article>
         <article class="metric-card">
-            <p class="metric-label">{% trans "Estimated time to clear queue" %}</p>
+            <p class="metric-label">{% trans "Estimated clear time" %}</p>
             <p class="metric-value">
                 {% if estimated_clear_time %}
                     {{ estimated_clear_time|timesince_display }}
                 {% else %}
-                    {% trans "No baseline yet" %}
+                    <span class="text-small text-muted">{% trans "No baseline yet" %}</span>
                 {% endif %}
             </p>
         </article>
@@ -91,7 +109,7 @@
                 {{ service_pace_per_hour|floatformat:1 }}
                 <span class="metric-unit">{% trans "customers/hour" %}</span>
             </p>
-            <p class="text-small text-muted">{% trans "Queue uptime" %}: {{ queue_uptime|timesince_display }}</p>
+            <p class="text-small text-muted" style="margin-top:.3rem">{% trans "Uptime" %}: {{ queue_uptime|timesince_display }}</p>
         </article>
     </div>
 </section>
@@ -110,8 +128,8 @@
                 <span class="plot-segment called" style="width:{{ flow_called_pct }}%"></span>
             </div>
             <div class="plot-legend text-small">
-                <span><i class="plot-dot waiting"></i>{% trans "Waiting customers" %}: {{ waiting_count }}</span>
-                <span><i class="plot-dot called"></i>{% trans "Currently called" %}: {{ called_count }}</span>
+                <span><i class="plot-dot waiting"></i>{% trans "Waiting" %}: {{ waiting_count }}</span>
+                <span><i class="plot-dot called"></i>{% trans "Called" %}: {{ called_count }}</span>
             </div>
         </article>
 
@@ -127,8 +145,8 @@
                 <span class="plot-segment long" style="width:{{ long_waiting_pct }}%"></span>
             </div>
             <div class="plot-legend text-small">
-                <span><i class="plot-dot fresh"></i>{% trans "Fresh (0-5m)" %}: {{ fresh_waiting_count }}</span>
-                <span><i class="plot-dot medium"></i>{% trans "Medium (5-15m)" %}: {{ medium_waiting_count }}</span>
+                <span><i class="plot-dot fresh"></i>{% trans "Fresh (0–5m)" %}: {{ fresh_waiting_count }}</span>
+                <span><i class="plot-dot medium"></i>{% trans "Medium (5–15m)" %}: {{ medium_waiting_count }}</span>
                 <span><i class="plot-dot long"></i>{% trans "Long (15m+)" %}: {{ long_waiting_count }}</span>
             </div>
         </article>
@@ -136,40 +154,50 @@
 </section>
 
 {% if called_customer and called_customer.called_at %}
-<section class="panel">
-    <h2>{% trans "Currently called" %}</h2>
-    <div class="customer-card" data-info='{{ called_customer.info|default_if_none:""|escapejs }}'>
+<section class="panel" style="border-color:#9ee4d8;background:var(--success-light)">
+    <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.75rem">
+        <span style="width:10px;height:10px;border-radius:50%;background:var(--success);display:inline-block;animation:blink 1.4s infinite"></span>
+        <h2 style="margin:0;color:var(--success)">{% trans "Now serving" %}</h2>
+    </div>
+    <div class="customer-card" data-info='{{ called_customer.info|default_if_none:""|escapejs }}' style="border-color:#9ee4d8">
         <div class="customer-head">
-            <strong>{{ called_customer.user.username }}</strong>
-            <span class="text-small text-muted">{% trans "Now serving" %}</span>
+            <strong style="font-size:1.05rem">{{ called_customer.user.username }}</strong>
+            <span class="text-small text-muted" style="background:var(--success-light);padding:.2rem .5rem;border-radius:999px;border:1px solid #9ee4d8;color:var(--success);font-weight:700">{% trans "Called" %}: {{ called_customer.called_at|timesince_display }}</span>
         </div>
-        <p class="text-small text-muted">{% trans "Called" %}: {{ called_customer.called_at|timesince_display }}</p>
-        <p class="text-small text-muted">{% trans "Waited" %}: {{ called_customer.wait_time|timesince_display }}</p>
-        <p class="text-small text-muted">{% trans "Code" %}: <code>{{ called_customer.secret_id }}</code></p>
+        <p class="text-small text-muted" style="margin-top:.5rem">{% trans "Waited" %}: {{ called_customer.wait_time|timesince_display }}</p>
+        <p class="text-small text-muted">{% trans "Code" %}: <code style="font-family:'Space Grotesk',monospace;letter-spacing:.08em;font-weight:700">{{ called_customer.secret_id }}</code></p>
         {% if called_customer.info %}
-            <p class="text-small"><strong>{% trans "Encrypted note" %}:</strong> <span class="decrypted">{% trans "Decrypting..." %}</span></p>
+            <p class="text-small" style="margin-top:.4rem"><strong>{% trans "Note" %}:</strong> <span class="decrypted" style="color:var(--muted)">{% trans "Decrypting..." %}</span></p>
         {% endif %}
     </div>
 </section>
 {% endif %}
 
 <section class="panel">
-    <h2>{% trans "Waiting customers" %}</h2>
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:.85rem">
+        <h2 style="margin:0">{% trans "Waiting customers" %}</h2>
+        {% if waiting_count %}
+            <span class="position-badge" style="font-size:.88rem;padding:.25rem .7rem;border-radius:999px">{{ waiting_count }}</span>
+        {% endif %}
+    </div>
     <div id="customers" class="info-list">
         {% for cust in waiting_customers %}
             <article class="customer-card" data-info='{{ cust.info|default_if_none:""|escapejs }}'>
                 <div class="customer-head">
                     <strong>{{ cust.user.username }}</strong>
-                    <span class="text-small text-muted">#{{ cust.calculated_position }}</span>
+                    <span class="position-badge">#{{ cust.calculated_position }}</span>
                 </div>
-                <p class="text-small text-muted">{% trans "Joined" %}: {{ cust.created_at|date:"H:i - d.m.Y" }}</p>
-                <p class="text-small text-muted">{% trans "Code" %}: <code>{{ cust.secret_id }}</code></p>
+                <p class="text-small text-muted" style="margin-top:.4rem">{% trans "Joined" %}: {{ cust.created_at|date:"H:i – d.m.Y" }}</p>
+                <p class="text-small text-muted">{% trans "Code" %}: <code style="font-family:'Space Grotesk',monospace;font-weight:700;letter-spacing:.06em">{{ cust.secret_id }}</code></p>
                 {% if cust.info %}
-                    <p class="text-small"><strong>{% trans "Encrypted note" %}:</strong> <span class="decrypted">{% trans "Decrypting..." %}</span></p>
+                    <p class="text-small" style="margin-top:.4rem"><strong>{% trans "Note" %}:</strong> <span class="decrypted" style="color:var(--muted)">{% trans "Decrypting..." %}</span></p>
                 {% endif %}
             </article>
         {% empty %}
-            <p class="text-muted">{% trans "No one is currently waiting in this queue." %}</p>
+            <div style="text-align:center;padding:2rem 1rem;color:var(--muted)">
+                <div style="font-size:2rem;margin-bottom:.5rem">🎉</div>
+                <p style="margin:0;font-weight:600">{% trans "No one is currently waiting." %}</p>
+            </div>
         {% endfor %}
     </div>
 </section>

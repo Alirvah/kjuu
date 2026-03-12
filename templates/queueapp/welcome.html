@@ -4,39 +4,63 @@
 
 {% block content %}
 <section class="panel hero">
-    <p class="kicker" style="color:rgba(255,255,255,.85)">{% trans "Digital queueing" %}</p>
-    <h1 class="page-title">{% trans "Stop waiting in line. Keep your place online." %}</h1>
-    <p class="page-subtitle" style="color:rgba(255,255,255,.93)">
-        {% trans "Enter the queue code to join instantly and track your turn from any device." %}
-    </p>
-</section>
-
-<section class="panel">
-    <div class="grid two">
+    <div class="join-hero-layout">
         <div>
-            <h2>{% trans "Join a queue" %}</h2>
-            <p class="text-muted">{% trans "Use a 4-character queue code from the provider." %}</p>
-            <form method="post" action="{% url 'queueapp:go_to_queue' %}" class="form-stack">
-                {% csrf_token %}
-                <div>
-                    <label for="queue_id">{% trans "Queue code" %}</label>
-                    <input class="input uppercase" type="text" name="queue_id" id="queue_id" maxlength="4" required>
-                </div>
-                <button class="btn primary full" type="submit">{% trans "Go to queue" %}</button>
-            </form>
+            <p class="kicker" style="color:rgba(255,255,255,.75)">{% trans "Digital queueing" %}</p>
+            <h1 class="page-title">{% trans "Stop waiting in line. Keep your place online." %}</h1>
+            <p class="page-subtitle" style="color:rgba(255,255,255,.9);max-width:480px">
+                {% trans "Enter the queue code to join instantly and track your turn from any device." %}
+            </p>
         </div>
-
-        <div class="metric-card">
-            <h3>{% trans "Why kjuu" %}</h3>
-            <ul>
-                <li>{% trans "No app install required" %}</li>
-                <li>{% trans "Real-time queue position" %}</li>
-                <li>{% trans "QR-friendly onboarding" %}</li>
-                <li>{% trans "Owner dashboard with serve controls" %}</li>
-            </ul>
+        <div class="join-code-display" style="flex-shrink:0">
+            <p class="join-code-label">{% trans "Quick join" %}</p>
+            <form method="post" action="{% url 'queueapp:go_to_queue' %}" style="display:flex;gap:.5rem;align-items:center">
+                {% csrf_token %}
+                <input
+                    class="input uppercase"
+                    type="text"
+                    name="queue_id"
+                    id="queue_id"
+                    maxlength="4"
+                    required
+                    placeholder="ABCD"
+                    style="max-width:7rem;font-family:'Space Grotesk',monospace;font-size:1.15rem;font-weight:800;letter-spacing:.12em;text-align:center;border-color:rgba(255,255,255,.35);background:rgba(255,255,255,.15);color:#fff;padding:.55rem .7rem;"
+                >
+                <button class="btn" type="submit" style="background:#fff;color:var(--primary-strong);font-weight:800;box-shadow:0 2px 12px rgba(0,0,0,.15);white-space:nowrap;">
+                    {% trans "Go" %} →
+                </button>
+            </form>
         </div>
     </div>
 </section>
+
+<div class="grid two" style="margin-top:1rem">
+    <section class="panel join-form-panel">
+        <p class="kicker">{% trans "Join a queue" %}</p>
+        <h2 style="margin-top:.25rem;margin-bottom:.5rem;font-size:1.15rem;">{% trans "Enter queue code" %}</h2>
+        <p class="text-muted text-small" style="margin:0 0 1rem">{% trans "Use the 4-character code from the provider or a QR scan." %}</p>
+        <form method="post" action="{% url 'queueapp:go_to_queue' %}" class="form-stack">
+            {% csrf_token %}
+            <div>
+                <label for="queue_id_main">{% trans "Queue code" %}</label>
+                <input class="input uppercase" type="text" name="queue_id" id="queue_id_main" maxlength="4" required placeholder="ABCD" style="font-family:'Space Grotesk',monospace;font-size:1.2rem;font-weight:800;letter-spacing:.1em;text-align:center;">
+            </div>
+            <button class="btn primary full" type="submit">{% trans "Go to queue" %} →</button>
+        </form>
+    </section>
+
+    <section class="panel why-panel">
+        <p class="kicker" style="color:var(--primary-strong)">{% trans "Why kjuu" %}</p>
+        <h2 style="margin-top:.25rem;margin-bottom:.8rem;font-size:1.15rem;">{% trans "Built to save your time" %}</h2>
+        <ul class="why-list">
+            <li>{% trans "No app install required" %}</li>
+            <li>{% trans "Real-time queue position updates" %}</li>
+            <li>{% trans "QR-friendly onboarding" %}</li>
+            <li>{% trans "Owner dashboard with serve controls" %}</li>
+            <li>{% trans "End-to-end encrypted notes" %}</li>
+        </ul>
+    </section>
+</div>
 
 {% include 'queueapp/description.html' %}
 {% endblock %}

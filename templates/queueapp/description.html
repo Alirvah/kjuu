@@ -1,19 +1,34 @@
 {% load i18n %}
 <div class="panel">
     <p class="kicker">{% trans "Feature overview" %}</p>
-    <h3 class="page-title" style="font-size:1.5rem">{% trans "What you can do with kjuu" %}</h3>
+    <h3 class="page-title" style="font-size:1.4rem;margin-bottom:1rem">{% trans "What you can do with kjuu" %}</h3>
     <div class="grid three">
-        <article class="metric-card">
+        <article class="feature-card">
+            <div class="feature-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1667d6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/>
+                </svg>
+            </div>
             <h4>{% trans "Create a queue" %}</h4>
-            <p class="text-muted text-small">{% trans "A signed-in user can create one virtual queue and manage it from a single dashboard." %}</p>
+            <p>{% trans "A signed-in user can create one virtual queue and manage it from a single dashboard." %}</p>
         </article>
-        <article class="metric-card">
+        <article class="feature-card">
+            <div class="feature-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0ea5a0" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><rect x="9" y="1" width="6" height="4" rx="1" ry="1"/><path d="M9 12l2 2 4-4"/>
+                </svg>
+            </div>
             <h4>{% trans "Join instantly" %}</h4>
-            <p class="text-muted text-small">{% trans "Customers join by queue code or QR and immediately get a live position." %}</p>
+            <p>{% trans "Customers join by queue code or QR and immediately get a live position." %}</p>
         </article>
-        <article class="metric-card">
+        <article class="feature-card">
+            <div class="feature-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1667d6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                </svg>
+            </div>
             <h4>{% trans "Serve fairly" %}</h4>
-            <p class="text-muted text-small">{% trans "Customers are served in FIFO order with wait-time tracking and optional encrypted note." %}</p>
+            <p>{% trans "Customers are served in FIFO order with wait-time tracking and optional encrypted note." %}</p>
         </article>
     </div>
 </div>

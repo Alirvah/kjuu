@@ -14,19 +14,22 @@
     <section class="panel" id="queue-status-panel">
         {% if user.active_customer %}
             {% if user.active_customer.called_at %}
-                <h2 class="text-center">{% trans "It is your turn." %}</h2>
-                <p class="text-center text-muted">{% trans "Show this unique code to staff:" %}</p>
-                <p class="text-center"><code class="code-badge">{{ user.active_customer.secret_id }}</code></p>
-                <div class="info-list text-center text-small text-muted">
-                    <p>{% trans "Time since called" %}: {{ user.active_customer.called_at|timesince_display }}</p>
-                    <p>{% trans "Total waiting time" %}: {{ user.active_customer.wait_time|timesince_display }}</p>
+                <div class="your-turn-banner">
+                    <span class="your-turn-badge">{% trans "It's your turn!" %}</span>
+                    <h2 style="margin:0 0 .4rem;font-family:'Space Grotesk',sans-serif;font-size:1.7rem;color:var(--success)">{% trans "Please proceed to the counter." %}</h2>
+                    <p class="text-muted">{% trans "Show this unique code to staff:" %}</p>
+                    <p style="margin:.6rem 0 .8rem"><code class="code-badge">{{ user.active_customer.secret_id }}</code></p>
+                    <div class="info-list text-center text-small text-muted" style="display:inline-grid;gap:.3rem">
+                        <p style="margin:0">{% trans "Time since called" %}: <strong>{{ user.active_customer.called_at|timesince_display }}</strong></p>
+                        <p style="margin:0">{% trans "Total waiting time" %}: <strong>{{ user.active_customer.wait_time|timesince_display }}</strong></p>
+                    </div>
                 </div>
             {% else %}
-                <p class="kicker text-center">{% trans "Current position" %}</p>
+                <p class="kicker text-center">{% trans "Your position" %}</p>
                 <p class="queue-number">{{ user.active_customer.position }}</p>
-                <p class="text-center text-muted">
+                <p class="text-center text-muted" style="margin-top:0">
                     {% if user.active_customer.position == 1 %}
-                        {% trans "Please prepare, you are next." %}
+                        <strong style="color:var(--accent)">{% trans "Please prepare — you are next!" %}</strong>
                     {% else %}
                         {% trans "Keep this page open to track updates." %}
                     {% endif %}
@@ -38,30 +41,33 @@
                 </form>
 
                 {% timezone "Europe/Bratislava" %}
-                    <p class="text-center text-small text-muted" style="margin-top:1rem;">
-                        {% trans "Joined at" %}: {{ user.active_customer.created_at|date:"H:i - d.m.Y" }}
+                    <p class="text-center text-small text-muted" style="margin-top:.85rem">
+                        {% trans "Joined at" %}: {{ user.active_customer.created_at|date:"H:i – d.m.Y" }}
                     </p>
                 {% endtimezone %}
             {% endif %}
         {% else %}
-            <h2>{% trans "Join this queue" %}</h2>
+            <h2 style="margin-top:0">{% trans "Join this queue" %}</h2>
             <p class="text-muted">{% trans "After joining, you will receive a live position and identification code." %}</p>
             {% if waiting_customers %}
-                <p class="text-small text-muted">
-                    {% blocktrans with count=waiting_customers %}People currently waiting: {{ count }}{% endblocktrans %}
+                <p class="text-small" style="color:var(--muted);background:var(--panel-soft);border:1px solid var(--border);border-radius:var(--radius-xs);display:inline-block;padding:.3rem .65rem;margin-bottom:.25rem">
+                    {% blocktrans with count=waiting_customers %}{{ count }} people currently waiting{% endblocktrans %}
                 </p>
             {% endif %}
 
             <form method="post" class="form-stack" style="margin-top:1rem;">
                 {% csrf_token %}
-                <button type="submit" class="btn primary">{% trans "Join queue" %}</button>
+                <button type="submit" class="btn primary full" style="padding:.8rem">{% trans "Join queue" %} →</button>
             </form>
         {% endif %}
     </section>
 
     <details id="metrics-collapsible" class="metrics-collapsible">
         <summary>
-            <span class="metrics-summary-title">{% trans "Queue insights" %}</span>
+            <span class="metrics-summary-title">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:.3rem"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                {% trans "Queue insights" %}
+            </span>
             <span class="text-small text-muted">{% trans "Tap to expand" %}</span>
         </summary>
         <section class="panel user-metrics-panel">
@@ -88,7 +94,7 @@
                                 {% if estimated_wait %}
                                     {{ estimated_wait|timesince_display }}
                                 {% else %}
-                                    {% trans "No wait history yet" %}
+                                    <span class="text-small text-muted">{% trans "No history yet" %}</span>
                                 {% endif %}
                             </p>
                         </article>
@@ -104,7 +110,7 @@
                             {% if queue_average_wait %}
                                 {{ queue_average_wait|timesince_display }}
                             {% else %}
-                                {% trans "No wait history yet" %}
+                                <span class="text-small text-muted">{% trans "No history yet" %}</span>
                             {% endif %}
                         </p>
                     </article>
@@ -113,23 +119,23 @@
                 <article class="metric-card">
                     <p class="metric-label">{% trans "Live queue load" %}</p>
                     <p class="metric-value">{{ queue_total_live_count }}</p>
-                    <p class="text-small text-muted">
+                    <p class="text-small text-muted" style="margin-top:.3rem">
                         {% blocktrans with waiting=queue_waiting_count called=queue_called_count %}Waiting: {{ waiting }}, called: {{ called }}{% endblocktrans %}
                     </p>
                 </article>
                 <article class="metric-card">
                     <p class="metric-label">{% trans "Queue status" %}</p>
-                    <p class="metric-value">
+                    <p class="metric-value" style="margin-top:.5rem">
                         {% if queue_is_active %}
-                            {% trans "Open" %}
+                            <span class="status-badge open">{% trans "Open" %}</span>
                         {% else %}
-                            {% trans "Paused" %}
+                            <span class="status-badge paused">{% trans "Paused" %}</span>
                         {% endif %}
                     </p>
                 </article>
 
                 <article class="metric-card metric-span-two plot-card">
-                    <p class="metric-label">{% trans "Queue composition plot" %}</p>
+                    <p class="metric-label">{% trans "Queue composition" %}</p>
                     <div
                         class="stacked-plot"
                         role="img"
@@ -146,14 +152,14 @@
 
                 {% if user.active_customer and not user.active_customer.called_at %}
                 <article class="metric-card metric-span-two plot-card">
-                    <p class="metric-label">{% trans "Your position plot" %}</p>
+                    <p class="metric-label">{% trans "Your position" %}</p>
                     <div class="stacked-plot" role="img">
                         <span class="plot-segment ahead" style="width:{{ people_ahead_pct|default:0 }}%"></span>
                         <span class="plot-segment behind" style="width:{{ people_behind_pct|default:100 }}%"></span>
                     </div>
                     <div class="plot-legend text-small">
-                        <span><i class="plot-dot ahead"></i>{% trans "Ahead" %}: {{ people_ahead|default:0 }}</span>
-                        <span><i class="plot-dot behind"></i>{% trans "Behind" %}: {{ people_behind|default:0 }}</span>
+                        <span><i class="plot-dot ahead"></i>{% trans "Ahead of you" %}: {{ people_ahead|default:0 }}</span>
+                        <span><i class="plot-dot behind"></i>{% trans "Behind you" %}: {{ people_behind|default:0 }}</span>
                     </div>
                 </article>
                 {% endif %}
@@ -163,12 +169,15 @@
 
     {% if user.active_customer and not user.active_customer.called_at %}
     <section class="panel" id="secure-note-panel">
-        <h3>{% trans "Encrypted note" %}</h3>
-        <p class="text-muted text-small">
-            {% trans "Optional note is encrypted end-to-end. It is readable only by you and the queue owner." %}
+        <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.4rem">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+            <h3 style="margin:0;font-size:1rem">{% trans "Encrypted note" %}</h3>
+        </div>
+        <p class="text-muted text-small" style="margin:0 0 .75rem">
+            {% trans "Optional. Readable only by you and the queue owner — encrypted end-to-end." %}
         </p>
 
-        <div class="actions-row" style="margin-top:.7rem;">
+        <div class="actions-row">
             <button id="enter-info-btn" class="btn secondary" type="button">{% trans "Edit note" %}</button>
         </div>
 
@@ -180,7 +189,7 @@
                 rows="3"
                 data-info='{{ user.active_customer.info|default_if_none:""|escape }}'
                 class="input"
-                placeholder="{% trans 'Type note...' %}"></textarea>
+                placeholder="{% trans 'Type your note...' %}"></textarea>
             <button id="info-submit-btn" class="btn primary" type="button">{% trans "Save note" %}</button>
         </div>
         <p id="secure-note-toast" class="note-toast" hidden aria-live="polite"></p>
