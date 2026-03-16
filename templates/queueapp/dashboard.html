@@ -4,9 +4,9 @@
 
 {% block content %}
 <section class="panel hero">
-    <p class="kicker" style="color:rgba(255,255,255,.75)">{% trans "Queue owner" %}</p>
+    <p class="kicker" style="color:rgba(255,255,255,.6)">{% trans "Queue owner" %}</p>
     <h1 class="page-title">{{ queue.name }}</h1>
-    <p class="page-subtitle" style="color:rgba(255,255,255,.88)">
+    <p class="page-subtitle" style="color:rgba(255,255,255,.85)">
         {% blocktrans with code=queue.short_id %}Queue code: <strong>{{ code }}</strong>{% endblocktrans %}
         &nbsp;
         {% if queue.active %}
@@ -21,7 +21,9 @@
     <div class="grid three">
         <article class="metric-card">
             <p class="metric-label">{% trans "Queue code" %}</p>
-            <p class="metric-value"><a href="{% url 'queueapp:qr_queue' queue.short_id %}" style="color:var(--primary);text-decoration:none;font-family:'Space Grotesk',monospace;letter-spacing:.08em">{{ queue.short_id }}</a></p>
+            <p class="metric-value">
+                <a href="{% url 'queueapp:qr_queue' queue.short_id %}" style="color:var(--primary);text-decoration:none;font-family:'Space Grotesk',monospace;letter-spacing:.08em">{{ queue.short_id }}</a>
+            </p>
         </article>
         <article class="metric-card">
             <p class="metric-label">{% trans "Waiting" %}</p>
@@ -41,16 +43,16 @@
         </article>
     </div>
 
-    <div class="actions-row" style="margin-top:1.25rem;">
+    <div class="dashboard-toolbar">
         <button class="btn neutral" id="copy-link-btn" type="button">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
             {% trans "Copy join link" %}
         </button>
 
         <form method="post" action="{% url 'queueapp:call_next' queue.short_id %}">
             {% csrf_token %}
             <button class="btn success" type="submit">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
                 {% trans "Call next customer" %}
             </button>
         </form>
@@ -59,12 +61,12 @@
             {% csrf_token %}
             {% if queue.active %}
                 <button class="btn warning" type="submit">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
                     {% trans "Pause queue" %}
                 </button>
             {% else %}
                 <button class="btn primary" type="submit">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
                     {% trans "Resume queue" %}
                 </button>
             {% endif %}
@@ -77,7 +79,7 @@
             </form>
         {% endif %}
     </div>
-    <p id="copy-link-msg" class="text-small text-muted" style="margin-top:.6rem;min-height:1.2em"></p>
+    <p id="copy-link-msg" class="text-small text-muted" style="margin-top:.5rem;min-height:1.2em"></p>
 </section>
 
 <section class="panel">
@@ -89,7 +91,7 @@
                 {% if oldest_wait_duration %}
                     {{ oldest_wait_duration|timesince_display }}
                 {% else %}
-                    <span class="text-muted" style="font-size:1rem">—</span>
+                    <span class="text-muted" style="font-size:.95rem">&mdash;</span>
                 {% endif %}
             </p>
         </article>
@@ -127,7 +129,7 @@
                 <span class="plot-segment waiting" style="width:{{ flow_waiting_pct }}%"></span>
                 <span class="plot-segment called" style="width:{{ flow_called_pct }}%"></span>
             </div>
-            <div class="plot-legend text-small">
+            <div class="plot-legend">
                 <span><i class="plot-dot waiting"></i>{% trans "Waiting" %}: {{ waiting_count }}</span>
                 <span><i class="plot-dot called"></i>{% trans "Called" %}: {{ called_count }}</span>
             </div>
@@ -144,7 +146,7 @@
                 <span class="plot-segment medium" style="width:{{ medium_waiting_pct }}%"></span>
                 <span class="plot-segment long" style="width:{{ long_waiting_pct }}%"></span>
             </div>
-            <div class="plot-legend text-small">
+            <div class="plot-legend">
                 <span><i class="plot-dot fresh"></i>{% trans "Fresh (0–5m)" %}: {{ fresh_waiting_count }}</span>
                 <span><i class="plot-dot medium"></i>{% trans "Medium (5–15m)" %}: {{ medium_waiting_count }}</span>
                 <span><i class="plot-dot long"></i>{% trans "Long (15m+)" %}: {{ long_waiting_count }}</span>
@@ -154,30 +156,30 @@
 </section>
 
 {% if called_customer and called_customer.called_at %}
-<section class="panel" style="border-color:#9ee4d8;background:var(--success-light)">
-    <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.75rem">
-        <span style="width:10px;height:10px;border-radius:50%;background:var(--success);display:inline-block;animation:blink 1.4s infinite"></span>
-        <h2 style="margin:0;color:var(--success)">{% trans "Now serving" %}</h2>
+<section class="panel now-serving-panel">
+    <div class="now-serving-header">
+        <span class="now-serving-dot"></span>
+        <h2>{% trans "Now serving" %}</h2>
     </div>
-    <div class="customer-card" data-info='{{ called_customer.info|default_if_none:""|escapejs }}' style="border-color:#9ee4d8">
+    <article class="customer-card" data-info='{{ called_customer.info|default_if_none:""|escapejs }}' style="border-color:#86efac">
         <div class="customer-head">
-            <strong style="font-size:1.05rem">{{ called_customer.user.username }}</strong>
-            <span class="text-small text-muted" style="background:var(--success-light);padding:.2rem .5rem;border-radius:999px;border:1px solid #9ee4d8;color:var(--success);font-weight:700">{% trans "Called" %}: {{ called_customer.called_at|timesince_display }}</span>
+            <strong style="font-size:1.02rem">{{ called_customer.user.username }}</strong>
+            <span class="called-time-badge">{% trans "Called" %}: {{ called_customer.called_at|timesince_display }}</span>
         </div>
-        <p class="text-small text-muted" style="margin-top:.5rem">{% trans "Waited" %}: {{ called_customer.wait_time|timesince_display }}</p>
-        <p class="text-small text-muted">{% trans "Code" %}: <code style="font-family:'Space Grotesk',monospace;letter-spacing:.08em;font-weight:700">{{ called_customer.secret_id }}</code></p>
+        <p class="customer-meta">{% trans "Waited" %}: {{ called_customer.wait_time|timesince_display }}</p>
+        <p class="customer-meta">{% trans "Code" %}: <code class="customer-code">{{ called_customer.secret_id }}</code></p>
         {% if called_customer.info %}
-            <p class="text-small" style="margin-top:.4rem"><strong>{% trans "Note" %}:</strong> <span class="decrypted" style="color:var(--muted)">{% trans "Decrypting..." %}</span></p>
+            <p class="customer-note"><strong>{% trans "Note" %}:</strong> <span class="decrypted text-muted">{% trans "Decrypting..." %}</span></p>
         {% endif %}
-    </div>
+    </article>
 </section>
 {% endif %}
 
 <section class="panel">
-    <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:.85rem">
-        <h2 style="margin:0">{% trans "Waiting customers" %}</h2>
+    <div class="customer-list-header">
+        <h2>{% trans "Waiting customers" %}</h2>
         {% if waiting_count %}
-            <span class="position-badge" style="font-size:.88rem;padding:.25rem .7rem;border-radius:999px">{{ waiting_count }}</span>
+            <span class="position-badge" style="font-size:.85rem;padding:.22rem .65rem">{{ waiting_count }}</span>
         {% endif %}
     </div>
     <div id="customers" class="info-list">
@@ -187,16 +189,15 @@
                     <strong>{{ cust.user.username }}</strong>
                     <span class="position-badge">#{{ cust.calculated_position }}</span>
                 </div>
-                <p class="text-small text-muted" style="margin-top:.4rem">{% trans "Joined" %}: {{ cust.created_at|date:"H:i – d.m.Y" }}</p>
-                <p class="text-small text-muted">{% trans "Code" %}: <code style="font-family:'Space Grotesk',monospace;font-weight:700;letter-spacing:.06em">{{ cust.secret_id }}</code></p>
+                <p class="customer-meta">{% trans "Joined" %}: {{ cust.created_at|date:"H:i – d.m.Y" }}</p>
+                <p class="customer-meta">{% trans "Code" %}: <code class="customer-code">{{ cust.secret_id }}</code></p>
                 {% if cust.info %}
-                    <p class="text-small" style="margin-top:.4rem"><strong>{% trans "Note" %}:</strong> <span class="decrypted" style="color:var(--muted)">{% trans "Decrypting..." %}</span></p>
+                    <p class="customer-note"><strong>{% trans "Note" %}:</strong> <span class="decrypted text-muted">{% trans "Decrypting..." %}</span></p>
                 {% endif %}
             </article>
         {% empty %}
-            <div style="text-align:center;padding:2rem 1rem;color:var(--muted)">
-                <div style="font-size:2rem;margin-bottom:.5rem">🎉</div>
-                <p style="margin:0;font-weight:600">{% trans "No one is currently waiting." %}</p>
+            <div class="empty-state">
+                <p>{% trans "No one is currently waiting." %}</p>
             </div>
         {% endfor %}
     </div>
@@ -210,7 +211,7 @@ window.addEventListener("DOMContentLoaded", function () {
   }
 
   function getCsrfToken() {
-    const match = document.cookie.match(/(?:^|;\s*)csrftoken=([^;]+)/);
+    var match = document.cookie.match(/(?:^|;\s*)csrftoken=([^;]+)/);
     if (match) {
       return decodeURIComponent(match[1]);
     }
@@ -224,7 +225,7 @@ window.addEventListener("DOMContentLoaded", function () {
       return JSON.parse(raw);
     } catch (error) {
       try {
-        const decoded = raw.replace(/\\u([0-9a-fA-F]{4})/g, function (_m, hex) {
+        var decoded = raw.replace(/\\u([0-9a-fA-F]{4})/g, function (_m, hex) {
           return String.fromCharCode(parseInt(hex, 16));
         });
         return JSON.parse(decoded);
@@ -234,17 +235,17 @@ window.addEventListener("DOMContentLoaded", function () {
     }
   }
 
-  const copyButton = document.getElementById("copy-link-btn");
-  const copyMessage = document.getElementById("copy-link-msg");
-  const queueShort = "{{ queue.short_id }}";
-  const csrfToken = getCsrfToken();
-  const serverPub = "{{ queue.public_key|default_if_none:''|escapejs }}";
-  const serverKeyVersion = Number("{{ queue.public_key_version|default:0 }}") || 0;
-  const ownerKeyStoreId = `owner:${queueShort}:{{ user.id }}`;
+  var copyButton = document.getElementById("copy-link-btn");
+  var copyMessage = document.getElementById("copy-link-msg");
+  var queueShort = "{{ queue.short_id }}";
+  var csrfToken = getCsrfToken();
+  var serverPub = "{{ queue.public_key|default_if_none:''|escapejs }}";
+  var serverKeyVersion = Number("{{ queue.public_key_version|default:0 }}") || 0;
+  var ownerKeyStoreId = "owner:" + queueShort + ":{{ user.id }}";
 
   if (copyButton) {
     copyButton.addEventListener("click", async function () {
-      const url = `${window.location.origin}/queue/go/?queue_id={{ queue.short_id }}`;
+      var url = window.location.origin + "/queue/go/?queue_id={{ queue.short_id }}";
       try {
         await navigator.clipboard.writeText(url);
         copyMessage.textContent = "{% trans 'Join link copied.' %}";
@@ -259,27 +260,28 @@ window.addEventListener("DOMContentLoaded", function () {
   }, 15000);
 
   async function decryptAllNotes() {
-    const privateKey = await window.retrievePrivateKey(ownerKeyStoreId);
+    var privateKey = await window.retrievePrivateKey(ownerKeyStoreId);
     if (!privateKey) {
       return;
     }
 
-    const blocks = document.querySelectorAll("[data-info]");
-    for (const block of blocks) {
-      const raw = block.dataset.info;
+    var blocks = document.querySelectorAll("[data-info]");
+    for (var i = 0; i < blocks.length; i++) {
+      var block = blocks[i];
+      var raw = block.dataset.info;
       if (!raw) continue;
 
-      const payload = parseInfoPayload(raw);
+      var payload = parseInfoPayload(raw);
       if (!payload) {
         continue;
       }
 
-      const output = block.querySelector(".decrypted");
+      var output = block.querySelector(".decrypted");
       if (!output || !payload.to_owner) continue;
 
       try {
-        const cipher = window.base64ToArrayBuffer(payload.to_owner);
-        const plain = await window.decryptWithPrivateKey(privateKey, cipher);
+        var cipher = window.base64ToArrayBuffer(payload.to_owner);
+        var plain = await window.decryptWithPrivateKey(privateKey, cipher);
         output.textContent = plain;
       } catch (e) {
         output.textContent = "{% trans 'Unable to decrypt' %}";
@@ -288,7 +290,7 @@ window.addEventListener("DOMContentLoaded", function () {
   }
 
   async function ensureOwnerKey() {
-    let privateKey = await window.retrievePrivateKey(ownerKeyStoreId);
+    var privateKey = await window.retrievePrivateKey(ownerKeyStoreId);
 
     if (privateKey && serverPub && serverKeyVersion > 0) {
       return;
@@ -299,11 +301,11 @@ window.addEventListener("DOMContentLoaded", function () {
       privateKey = null;
     }
 
-    const pair = await window.generateRSAKeyPair();
+    var pair = await window.generateRSAKeyPair();
     await window.storePrivateKey(pair.privateKey, ownerKeyStoreId);
-    const publicKey = await window.exportPublicKeyToBase64(pair.publicKey);
+    var publicKey = await window.exportPublicKeyToBase64(pair.publicKey);
 
-    const registerResponse = await fetch(`/q/${queueShort}/register_key/`, {
+    var registerResponse = await fetch("/q/" + queueShort + "/register_key/", {
       method: "POST",
       headers: {
         "X-CSRFToken": csrfToken,

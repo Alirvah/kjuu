@@ -3,42 +3,40 @@
 {% block title %}{% trans "Dashboard" %}{% endblock %}
 
 {% block content %}
-<section class="panel hero">
-    <p class="kicker" style="color:rgba(255,255,255,.85)">{% trans "Member area" %}</p>
+<section class="panel workspace-hero">
+    <p class="kicker">{% trans "Member area" %}</p>
     <h1 class="page-title">{% trans "Your queue workspace" %}</h1>
-    <p class="page-subtitle" style="color:rgba(255,255,255,.93)">
-        {% trans "Manage your queue, or track your active waiting position." %}
-    </p>
+    <p class="page-subtitle">{% trans "Manage your queue, or track your active waiting position." %}</p>
 </section>
 
-<section class="panel">
+<section class="panel workspace-panel">
     {% if user_queue %}
         <h2>{% trans "You own a queue" %}</h2>
         <p class="text-muted">{% blocktrans with code=user_queue.short_id %}Queue code: {{ code }}{% endblocktrans %}</p>
-        <div class="actions-row">
+        <div class="actions-row" style="margin-top:.75rem">
             <a class="btn primary" href="{% url 'queueapp:queue_dashboard' user_queue.short_id %}">{% trans "Open owner dashboard" %}</a>
         </div>
     {% elif active_customer %}
         <h2>{% trans "You are currently waiting" %}</h2>
         <p class="text-muted">{{ active_customer.queue.name }}</p>
-        <div class="actions-row">
+        <div class="actions-row" style="margin-top:.75rem">
             <a class="btn primary" href="{% url 'queueapp:join_queue' active_customer.queue.short_id %}">{% trans "Open live position" %}</a>
         </div>
     {% else %}
         <h2>{% trans "Join or create" %}</h2>
-        <div class="grid two">
-            <form method="post" action="{% url 'queueapp:go_to_queue' %}" class="form-stack panel" style="padding:1rem">
+        <div class="grid two" style="margin-top:.75rem">
+            <form method="post" action="{% url 'queueapp:go_to_queue' %}" class="form-stack panel" style="padding:1.15rem">
                 {% csrf_token %}
                 <div>
                     <label for="queue_id">{% trans "Queue code" %}</label>
-                    <input type="text" name="queue_id" id="queue_id" maxlength="4" class="input uppercase" required>
+                    <input type="text" name="queue_id" id="queue_id" maxlength="4" class="input uppercase" required placeholder="ABCD">
                 </div>
                 <button type="submit" class="btn primary full">{% trans "Join queue" %}</button>
             </form>
 
-            <div class="panel" style="padding:1rem;background:var(--panel-soft)">
-                <h3 style="margin-top:0">{% trans "Create your own queue" %}</h3>
-                <p class="text-muted">{% trans "For clinics, services, events and stores." %}</p>
+            <div class="panel workspace-create-card">
+                <h3>{% trans "Create your own queue" %}</h3>
+                <p class="text-muted text-small" style="margin-bottom:.75rem">{% trans "For clinics, services, events and stores." %}</p>
                 <a class="btn success" href="{% url 'queueapp:create_queue' %}">{% trans "Create queue" %}</a>
             </div>
         </div>

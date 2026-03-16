@@ -3,14 +3,14 @@
 {% block title %}{% trans "Delete account" %}{% endblock %}
 
 {% block content %}
-<section class="panel" style="max-width:520px;margin:0 auto;">
-    <p class="kicker">{% trans "Danger zone" %}</p>
-    <h1 class="page-title" style="font-size:1.7rem">{% trans "Delete account permanently" %}</h1>
-    <p class="text-muted">
+<section class="panel auth-card" style="border-color:#fca5a5">
+    <p class="kicker" style="color:var(--danger)">{% trans "Danger zone" %}</p>
+    <h1 class="page-title" style="font-size:1.4rem">{% trans "Delete account permanently" %}</h1>
+    <p class="text-muted" style="margin-bottom:1.25rem">
         {% trans "This action is irreversible. Your account will be removed immediately." %}
     </p>
 
-    <form method="post" class="actions-row" style="margin-top:1rem;">
+    <form method="post" class="actions-row">
         {% csrf_token %}
         <button type="submit" class="btn danger">{% trans "Yes, delete my account" %}</button>
         <a class="btn neutral" href="{% url 'queueapp:home' %}">{% trans "Cancel" %}</a>

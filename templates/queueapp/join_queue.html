@@ -4,9 +4,9 @@
 
 {% block content %}
 <section class="panel hero">
-    <p class="kicker" style="color:rgba(255,255,255,.85)">{% trans "Live queue" %}</p>
+    <p class="kicker" style="color:rgba(255,255,255,.6)">{% trans "Live queue" %}</p>
     <h1 class="page-title">{{ queue.name }}</h1>
-    <p class="page-subtitle" style="color:rgba(255,255,255,.93)">
+    <p class="page-subtitle" style="color:rgba(255,255,255,.85)">
         {% blocktrans with code=queue.short_id %}Queue code: {{ code }}{% endblocktrans %}
     </p>
 </section>
@@ -38,7 +38,7 @@ window.addEventListener("DOMContentLoaded", function () {
 
   function looksLikeEncryptedPayload(raw) {
     if (!raw) return false;
-    const text = raw.trim();
+    var text = raw.trim();
     return text.startsWith("{") && (text.includes("to_owner") || text.includes("\\u0074\\u006f\\u005f\\u006f\\u0077\\u006e\\u0065\\u0072"));
   }
 
@@ -54,30 +54,30 @@ window.addEventListener("DOMContentLoaded", function () {
   }
 
   function getCsrfToken() {
-    const match = document.cookie.match(/(?:^|;\s*)csrftoken=([^;]+)/);
+    var match = document.cookie.match(/(?:^|;\s*)csrftoken=([^;]+)/);
     if (match) return decodeURIComponent(match[1]);
     return "{{ csrf_token }}";
   }
 
   function isInteractiveFocused() {
-    const active = document.activeElement;
+    var active = document.activeElement;
     if (!active) return false;
     return active.tagName === "INPUT" || active.tagName === "TEXTAREA" || active.tagName === "SELECT" || active.isContentEditable;
   }
 
   function generateNonce() {
-    const bytes = new Uint8Array(18);
+    var bytes = new Uint8Array(18);
     crypto.getRandomValues(bytes);
-    return btoa(String.fromCharCode(...bytes)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+    return btoa(String.fromCharCode.apply(null, bytes)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
   }
 
   function initMetricsPanel() {
-    const shell = document.getElementById("live-queue-shell");
-    const collapsible = document.getElementById("metrics-collapsible");
+    var shell = document.getElementById("live-queue-shell");
+    var collapsible = document.getElementById("metrics-collapsible");
     if (!shell || !collapsible) return;
 
-    const stateKey = `metrics-open:${shell.dataset.queueShort}:${shell.dataset.userId}`;
-    let savedState = null;
+    var stateKey = "metrics-open:" + shell.dataset.queueShort + ":" + shell.dataset.userId;
+    var savedState = null;
     try {
       savedState = window.sessionStorage.getItem(stateKey);
     } catch (_error) {}
@@ -96,22 +96,21 @@ window.addEventListener("DOMContentLoaded", function () {
   }
 
   async function decryptExistingNote(infoInput, keyStoreId) {
-    const encoded = infoInput.dataset.info;
+    var encoded = infoInput.dataset.info;
     if (!encoded) return;
 
-    const payload = parseInfoPayload(encoded);
+    var payload = parseInfoPayload(encoded);
     if (!payload || !payload.to_customer) {
       if (!looksLikeEncryptedPayload(encoded)) {
-        // Backward compatibility for very old plaintext notes.
         infoInput.value = decodeLegacyEscapedText(encoded);
       }
       return;
     }
 
     try {
-      const privateKey = await window.retrievePrivateKey(keyStoreId);
+      var privateKey = await window.retrievePrivateKey(keyStoreId);
       if (!privateKey) return;
-      const ciphertext = window.base64ToArrayBuffer(payload.to_customer);
+      var ciphertext = window.base64ToArrayBuffer(payload.to_customer);
       infoInput.value = await window.decryptWithPrivateKey(privateKey, ciphertext);
     } catch (error) {
       console.error("Failed to decrypt note", error);
@@ -119,11 +118,11 @@ window.addEventListener("DOMContentLoaded", function () {
   }
 
   async function ensureCustomerKey(shell, keyStoreId) {
-    const queueShort = shell.dataset.queueShort;
-    const csrfToken = getCsrfToken();
-    const serverPub = shell.dataset.customerPub || "";
-    const serverVersion = Number(shell.dataset.customerVersion || "0");
-    let privateKey = await window.retrievePrivateKey(keyStoreId);
+    var queueShort = shell.dataset.queueShort;
+    var csrfToken = getCsrfToken();
+    var serverPub = shell.dataset.customerPub || "";
+    var serverVersion = Number(shell.dataset.customerVersion || "0");
+    var privateKey = await window.retrievePrivateKey(keyStoreId);
 
     if (privateKey && serverPub && serverVersion > 0) {
       return { publicKeyBase64: serverPub, version: serverVersion };
@@ -135,11 +134,11 @@ window.addEventListener("DOMContentLoaded", function () {
     }
 
     if (!privateKey) {
-      const pair = await window.generateRSAKeyPair();
+      var pair = await window.generateRSAKeyPair();
       await window.storePrivateKey(pair.privateKey, keyStoreId);
-      const publicKey = await window.exportPublicKeyToBase64(pair.publicKey);
+      var publicKey = await window.exportPublicKeyToBase64(pair.publicKey);
 
-      const registerResponse = await fetch(`/q/${queueShort}/register_key/`, {
+      var registerResponse = await fetch("/q/" + queueShort + "/register_key/", {
         method: "POST",
         headers: {
           "X-CSRFToken": csrfToken,
@@ -151,7 +150,7 @@ window.addEventListener("DOMContentLoaded", function () {
         return null;
       }
 
-      let responseData = { version: 0 };
+      var responseData = { version: 0 };
       try {
         responseData = await registerResponse.json();
       } catch (_error) {}
@@ -162,23 +161,23 @@ window.addEventListener("DOMContentLoaded", function () {
   }
 
   async function initSecureNotePanel() {
-    const shell = document.getElementById("live-queue-shell");
+    var shell = document.getElementById("live-queue-shell");
     if (!shell) return;
 
-    const enterBtn = document.getElementById("enter-info-btn");
-    const infoForm = document.getElementById("info-form");
-    const infoInput = document.getElementById("info-input");
-    const submitBtn = document.getElementById("info-submit-btn");
-    const toast = document.getElementById("secure-note-toast");
-    const submitForm = document.getElementById("secure-note-submit-form");
-    const clearForm = document.getElementById("secure-note-clear-form");
+    var enterBtn = document.getElementById("enter-info-btn");
+    var infoForm = document.getElementById("info-form");
+    var infoInput = document.getElementById("info-input");
+    var submitBtn = document.getElementById("info-submit-btn");
+    var toast = document.getElementById("secure-note-toast");
+    var submitForm = document.getElementById("secure-note-submit-form");
+    var clearForm = document.getElementById("secure-note-clear-form");
     if (!enterBtn || !infoForm || !infoInput || !submitBtn || !submitForm || !clearForm || !toast) return;
 
-    const queueShort = shell.dataset.queueShort;
-    const ownerPub = shell.dataset.ownerPub || "";
-    const ownerVersion = Number(shell.dataset.ownerVersion || "0");
-    const userId = shell.dataset.userId;
-    const keyStoreId = `customer:${queueShort}:${userId}`;
+    var queueShort = shell.dataset.queueShort;
+    var ownerPub = shell.dataset.ownerPub || "";
+    var ownerVersion = Number(shell.dataset.ownerVersion || "0");
+    var userId = shell.dataset.userId;
+    var keyStoreId = "customer:" + queueShort + ":" + userId;
 
     function showToast(message, kind) {
       toast.hidden = false;
@@ -189,7 +188,7 @@ window.addEventListener("DOMContentLoaded", function () {
       if (toast.dataset.timer) {
         clearTimeout(Number(toast.dataset.timer));
       }
-      const timer = window.setTimeout(function () {
+      var timer = window.setTimeout(function () {
         toast.hidden = true;
       }, 3200);
       toast.dataset.timer = String(timer);
@@ -208,7 +207,7 @@ window.addEventListener("DOMContentLoaded", function () {
     if (enterBtn.dataset.bound !== "1") {
       enterBtn.dataset.bound = "1";
       enterBtn.addEventListener("click", function () {
-        const hidden = getComputedStyle(infoForm).display === "none";
+        var hidden = getComputedStyle(infoForm).display === "none";
         infoForm.style.display = hidden ? "grid" : "none";
         enterBtn.textContent = hidden ? "{% trans 'Hide editor' %}" : "{% trans 'Edit note' %}";
       });
@@ -217,7 +216,7 @@ window.addEventListener("DOMContentLoaded", function () {
     if (submitBtn.dataset.bound !== "1") {
       submitBtn.dataset.bound = "1";
       submitBtn.addEventListener("click", async function () {
-        const text = (infoInput.value || "").trim();
+        var text = (infoInput.value || "").trim();
 
         if (!text) {
           htmx.trigger(clearForm, "submit");
@@ -229,19 +228,19 @@ window.addEventListener("DOMContentLoaded", function () {
           return;
         }
 
-        const keyState = await ensureCustomerKey(shell, keyStoreId);
+        var keyState = await ensureCustomerKey(shell, keyStoreId);
         if (!keyState || !keyState.publicKeyBase64 || keyState.version < 1) {
           alert("{% trans 'Unable to initialize secure key.' %}");
           return;
         }
 
         try {
-          const ownerKey = await window.importPublicKeyFromBase64(ownerPub);
-          const customerKey = await window.importPublicKeyFromBase64(keyState.publicKeyBase64);
-          const encryptedForOwner = window.arrayBufferToBase64(
+          var ownerKey = await window.importPublicKeyFromBase64(ownerPub);
+          var customerKey = await window.importPublicKeyFromBase64(keyState.publicKeyBase64);
+          var encryptedForOwner = window.arrayBufferToBase64(
             await window.encryptWithPublicKey(ownerKey, text)
           );
-          const encryptedForCustomer = window.arrayBufferToBase64(
+          var encryptedForCustomer = window.arrayBufferToBase64(
             await window.encryptWithPublicKey(customerKey, text)
           );
 
@@ -294,7 +293,7 @@ window.addEventListener("DOMContentLoaded", function () {
   }
 
   document.body.addEventListener("htmx:beforeRequest", function (event) {
-    const elt = event.detail.elt;
+    var elt = event.detail.elt;
     if (elt && elt.id === "live-queue-shell" && isInteractiveFocused()) {
       event.preventDefault();
     }
@@ -308,10 +307,10 @@ window.addEventListener("DOMContentLoaded", function () {
   });
 
   document.body.addEventListener("htmx:responseError", function (event) {
-    const elt = event.detail.elt;
+    var elt = event.detail.elt;
     if (!elt) return;
     if (elt.id === "secure-note-submit-form" || elt.id === "secure-note-clear-form") {
-      const message = (event.detail.xhr && event.detail.xhr.responseText) || "{% trans 'Secure note request failed.' %}";
+      var message = (event.detail.xhr && event.detail.xhr.responseText) || "{% trans 'Secure note request failed.' %}";
       alert(message);
     }
   });

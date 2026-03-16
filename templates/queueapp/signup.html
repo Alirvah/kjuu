@@ -3,9 +3,9 @@
 {% block title %}{% trans "Sign up" %}{% endblock %}
 
 {% block content %}
-<section class="panel" style="max-width:560px;margin:0 auto;">
-    <p class="kicker">{% trans "Registration" %}</p>
-    <h1 class="page-title" style="font-size:1.8rem">{% trans "Create your account" %}</h1>
+<section class="panel auth-card">
+    <h1 class="page-title">{% trans "Create your account" %}</h1>
+    <p class="auth-subtitle">{% trans "Sign up to create or join virtual queues." %}</p>
 
     <form method="post" class="form-stack">
         {% csrf_token %}
@@ -35,7 +35,7 @@
             {% endif %}
         </div>
 
-        <label style="display:flex;gap:.5rem;align-items:flex-start;font-weight:500;">
+        <label class="consent-label">
             <input type="checkbox" name="consent" id="consent" value="1" {% if request.POST.consent %}checked{% endif %}>
             <span>
                 {% trans "I agree with" %}
@@ -48,7 +48,7 @@
         <button type="submit" class="btn primary full">{% trans "Sign up" %}</button>
     </form>
 
-    <p class="text-muted text-small" style="margin-top:1rem;">
+    <p class="form-footer">
         {% trans "Already registered?" %}
         <a href="{% url 'queueapp:login' %}?next={{ next|default:'' }}">{% trans "Log in" %}</a>
     </p>

@@ -9,7 +9,7 @@
     <link rel="icon" type="image/svg+xml" href="{% static 'favicon.svg' %}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Space+Grotesk:wght@500;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'styles.css' %}">
     <script src="https://unpkg.com/htmx.org@2.0.4" defer></script>
     <script src="{% static 'js/crypto.js' %}" defer></script>
@@ -20,7 +20,7 @@
         <div class="container header-inner">
             <a class="brand" href="{% url 'queueapp:home' %}">
                 <span class="brand-icon">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
                         <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/>
                         <line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
                     </svg>
@@ -69,7 +69,7 @@
             <span style="font-weight:600">&copy; {% now "Y" %} kjuu</span>
             <span class="inline-links">
                 <a href="{% url 'queueapp:terms' %}">{% trans "Terms" %}</a>
-                <span style="color:var(--border)">|</span>
+                <span style="color:var(--border)">&middot;</span>
                 <a href="{% url 'queueapp:privacy' %}">{% trans "Privacy" %}</a>
             </span>
         </div>

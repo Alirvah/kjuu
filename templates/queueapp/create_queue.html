@@ -4,17 +4,17 @@
 
 {% block content %}
 <section class="panel hero">
-    <p class="kicker" style="color:rgba(255,255,255,.85)">{% trans "Owner setup" %}</p>
+    <p class="kicker" style="color:rgba(255,255,255,.6)">{% trans "Owner setup" %}</p>
     <h1 class="page-title">{% trans "Create your virtual queue" %}</h1>
-    <p class="page-subtitle" style="color:rgba(255,255,255,.93)">{% trans "Choose a short public name. A QR PDF will be generated automatically." %}</p>
+    <p class="page-subtitle" style="color:rgba(255,255,255,.85)">{% trans "Choose a short public name. A QR PDF will be generated automatically." %}</p>
 </section>
 
-<section class="panel" style="max-width:700px;margin:0 auto;">
+<section class="panel create-form-card">
     <form method="post" action="{% url 'queueapp:create_queue' %}" class="form-stack">
         {% csrf_token %}
         <div>
             <label for="name">{% trans "Queue name" %}</label>
-            <input class="input" type="text" name="name" id="name" value="{{ form.name.value|default:'' }}" required>
+            <input class="input" type="text" name="name" id="name" value="{{ form.name.value|default:'' }}" required placeholder="{% trans 'e.g. City Clinic' %}">
             {% if form.name.errors %}
                 <ul class="error-list">
                     {% for error in form.name.errors %}
