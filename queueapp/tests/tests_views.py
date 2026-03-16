@@ -43,6 +43,36 @@ def test_signup_requires_consent_and_login_flow(client):
 
 
 @pytest.mark.django_db
+def test_signup_next_redirects_to_join_queue(client, queue):
+    """Full flow: QR scan → signup with next param → redirect to join queue."""
+    signup_url = reverse("queueapp:signup")
+    join_url = reverse("queueapp:join_queue", args=[queue.short_id])
+
+    # GET signup page with next param preserves it in context
+    get_resp = client.get(f"{signup_url}?next={join_url}")
+    assert get_resp.status_code == 200
+    assert join_url in get_resp.content.decode()
+
+    # POST signup with next param redirects to join queue
+    response = client.post(
+        f"{signup_url}?next={join_url}",
+        data={
+            "username": "newuser",
+            "password": "StrongPass123",
+            "consent": "1",
+            "next": join_url,
+        },
+    )
+    assert response.status_code == 302
+    assert response.url == join_url
+
+    # User is now logged in and can access join queue page
+    join_resp = client.get(join_url)
+    assert join_resp.status_code == 200
+    assert join_resp.context["queue"].short_id == queue.short_id
+
+
+@pytest.mark.django_db
 def test_login_logout_and_next_redirect(client, customer_user):
     login_url = reverse("queueapp:login")
     next_url = reverse("queueapp:home")
